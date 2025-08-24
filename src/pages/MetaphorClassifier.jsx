@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import Plot from 'react-plotly.js';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function MetaphorClassifier() {
   const [inputText, setInputText] = useState('');
@@ -19,6 +21,7 @@ export default function MetaphorClassifier() {
   const [searchKeyword, setSearchKeyword] = useState(''); // for keyword search
   const [copyStatus, setCopyStatus] = useState(false); // for copy feedback
   const [recentSearches, setRecentSearches] = useState([]);
+  const [feedback, setFeedback] = useState("");
   const pageSize = 5;
 
   const examples = [
@@ -48,7 +51,31 @@ export default function MetaphorClassifier() {
   "அந்த பெண்ணின் கண்கள் நட்சத்திரங்கள் போல மின்னின. (Her eyes sparkled like stars.)",
   "Words are the dress of thoughts."
 ];
+const submitFeedback = (feedback) => {
+  if (!feedback.trim()) {
+    toast.error("Please enter your feedback before submitting.", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+    return;
+  }
 
+  console.log("Feedback submitted:", feedback);
+  toast.success("Thank you for your feedback!", {
+    position: "top-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  });
+};
   const handleInputChange = (e) => {
     setInputText(e.target.value);
   };
@@ -249,6 +276,7 @@ const pagedResults = useMemo(() => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100">
       {/* Header with subtle gradient and shadow */}
+      <ToastContainer />
       <header className="bg-gradient-to-r from-amber-900 to-amber-700 text-white p-6 shadow-lg">
         <div className="max-w-full mx-auto px-6">
           <div className="flex justify-between items-center">
@@ -1065,6 +1093,8 @@ const pagedResults = useMemo(() => {
     <li>Switch between "Card" and "Table" views for different layouts.</li>
   </ul>
 </div>
+const [feedback, setFeedback] = useState("");
+
 <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
   <h2 className="text-xl font-bold mb-4 text-white flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
@@ -1076,8 +1106,13 @@ const pagedResults = useMemo(() => {
     className="w-full bg-gray-700 border border-gray-600 text-white rounded-md p-3 text-sm"
     placeholder="Share your feedback..."
     rows={4}
+    value={feedback}
+    onChange={(e) => setFeedback(e.target.value)}
   />
-  <button className="mt-3 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg">
+  <button
+    className="mt-3 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg"
+    onClick={() => submitFeedback(feedback)}
+  >
     Submit Feedback
   </button>
 </div>
