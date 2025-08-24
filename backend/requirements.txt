@@ -1,0 +1,12 @@
+fastapi>=0.68.0
+uvicorn>=0.15.0
+pydantic>=1.8.2
+python-dotenv>=0.19.1
+firebase-admin>=5.0.0
+httpx>=0.20.0
+python-multipart>=0.0.5
+aiofiles>=0.8.0
+pytest>=6.2.5
+python-jose>=3.3.0
+tenacity>=8.0.1
+starlette>=0.14.2

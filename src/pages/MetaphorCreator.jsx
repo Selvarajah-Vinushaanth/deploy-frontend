@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import Plot from 'react-plotly.js';
 
 export default function MetaphorCreator() {
   const [source, setSource] = useState('');
@@ -9,6 +10,9 @@ export default function MetaphorCreator() {
   const [createdMetaphors, setCreatedMetaphors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [filterEmotion, setFilterEmotion] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('default');
 
   const emotions = [
     { value: 'positive', label: 'Positive / நேர்மறை' },
@@ -84,6 +88,37 @@ export default function MetaphorCreator() {
     setSource(example.source);
     setTarget(example.target);
   };
+
+  // Filtering and sorting logic
+  const filteredMetaphors = createdMetaphors
+    .filter(m => {
+      if (filterEmotion !== 'all' && emotion !== filterEmotion) return false;
+      if (searchTerm && !m.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortOrder === 'asc') return a.localeCompare(b);
+      if (sortOrder === 'desc') return b.localeCompare(a);
+      return 0;
+    });
+
+  // Statistics for charts
+  const emotionCounts = {
+    positive: createdMetaphors.filter(() => emotion === 'positive').length,
+    negative: createdMetaphors.filter(() => emotion === 'negative').length,
+    neutral: createdMetaphors.filter(() => emotion === 'neutral').length,
+  };
+
+  // Word frequency for word cloud
+  const wordFreq = {};
+  createdMetaphors.forEach(m => {
+    m.split(/\s+/).forEach(word => {
+      wordFreq[word] = (wordFreq[word] || 0) + 1;
+    });
+  });
+  const topWords = Object.entries(wordFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
@@ -205,9 +240,54 @@ export default function MetaphorCreator() {
           <div className="md:col-span-2 bg-gray-800 border border-gray-700 rounded-xl shadow-md p-6">
             <h2 className="text-xl font-bold mb-4 text-white">Generated Metaphors</h2>
             
-            {createdMetaphors.length > 0 ? (
+            {/* Advanced Filters */}
+            {createdMetaphors.length > 0 && (
+              <div className="mb-6 flex flex-wrap gap-4 items-center">
+                <div>
+                  <label className="text-sm text-gray-300 mr-2">Filter by Emotion:</label>
+                  <select
+                    className="bg-gray-700 border border-gray-600 text-white rounded px-2 py-1"
+                    value={filterEmotion}
+                    onChange={e => setFilterEmotion(e.target.value)}
+                  >
+                    <option value="all">All</option>
+                    <option value="positive">Positive</option>
+                    <option value="negative">Negative</option>
+                    <option value="neutral">Neutral</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-300 mr-2">Search:</label>
+                  <input
+                    type="text"
+                    className="bg-gray-700 border border-gray-600 text-white rounded px-2 py-1"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    placeholder="Keyword..."
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-300 mr-2">Sort:</label>
+                  <select
+                    className="bg-gray-700 border border-gray-600 text-white rounded px-2 py-1"
+                    value={sortOrder}
+                    onChange={e => setSortOrder(e.target.value)}
+                  >
+                    <option value="default">Default</option>
+                    <option value="asc">A-Z</option>
+                    <option value="desc">Z-A</option>
+                  </select>
+                </div>
+                <div className="text-xs text-gray-400 ml-2">
+                  Showing {filteredMetaphors.length} of {createdMetaphors.length}
+                </div>
+              </div>
+            )}
+            
+            {/* Metaphor List */}
+            {filteredMetaphors.length > 0 ? (
               <div className="space-y-4">
-                {createdMetaphors.map((metaphor, index) => (
+                {filteredMetaphors.map((metaphor, index) => (
                   <div
                     key={index}
                     className="bg-gray-700 border-gray-600 p-4 rounded-lg relative group"
@@ -236,6 +316,63 @@ export default function MetaphorCreator() {
                 </svg>
                 <p className="text-center">Enter source and target domains to generate metaphors</p>
                 <p className="text-center text-sm mt-2">Example: Source = "நிலவு" (Moon), Target = "முகம்" (Face)</p>
+              </div>
+            )}
+            
+            {/* Charts & Stats */}
+            {createdMetaphors.length > 0 && (
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Emotion Distribution Pie */}
+                <div>
+                  <h3 className="font-medium text-gray-300 mb-2">Emotion Distribution</h3>
+                  <Plot
+                    data={[
+                      {
+                        type: 'pie',
+                        values: [emotionCounts.positive, emotionCounts.negative, emotionCounts.neutral],
+                        labels: ['Positive', 'Negative', 'Neutral'],
+                        marker: { colors: ['#a3e635', '#f87171', '#fbbf24'] },
+                        hole: 0.4
+                      }
+                    ]}
+                    layout={{
+                      margin: { t: 0, r: 0, l: 0, b: 0 },
+                      showlegend: true,
+                      legend: { font: { color: '#e5e7eb' } },
+                      paper_bgcolor: 'rgba(0,0,0,0)',
+                      plot_bgcolor: 'rgba(0,0,0,0)',
+                      autosize: true,
+                      font: { color: '#e5e7eb' }
+                    }}
+                    config={{ displayModeBar: false }}
+                    style={{ width: '100%', height: '250px' }}
+                  />
+                </div>
+                {/* Word Cloud (Bar Chart) */}
+                <div>
+                  <h3 className="font-medium text-gray-300 mb-2">Top Words in Metaphors</h3>
+                  <Plot
+                    data={[
+                      {
+                        type: 'bar',
+                        x: topWords.map(([w]) => w),
+                        y: topWords.map(([_, c]) => c),
+                        marker: { color: '#a78bfa' }
+                      }
+                    ]}
+                    layout={{
+                      margin: { t: 20, r: 0, l: 40, b: 40 },
+                      paper_bgcolor: 'rgba(0,0,0,0)',
+                      plot_bgcolor: 'rgba(0,0,0,0)',
+                      autosize: true,
+                      font: { color: '#e5e7eb' },
+                      xaxis: { title: 'Word', tickangle: -45 },
+                      yaxis: { title: 'Frequency' }
+                    }}
+                    config={{ displayModeBar: false }}
+                    style={{ width: '100%', height: '250px' }}
+                  />
+                </div>
               </div>
             )}
             

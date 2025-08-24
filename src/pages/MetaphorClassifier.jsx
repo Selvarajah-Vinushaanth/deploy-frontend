@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Plot from 'react-plotly.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function MetaphorClassifier() {
   const [inputText, setInputText] = useState('');
@@ -9,6 +11,15 @@ export default function MetaphorClassifier() {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [filterLabel, setFilterLabel] = useState('all');
+  const [filterConfidence, setFilterConfidence] = useState([0, 1]);
+  const [viewMode, setViewMode] = useState('card'); // 'card' or 'table'
+  const [page, setPage] = useState(1);
+  const [copied, setCopied] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState(''); // for keyword search
+  const [copyStatus, setCopyStatus] = useState(false); // for copy feedback
+  const [recentSearches, setRecentSearches] = useState([]);
+  const pageSize = 5;
 
   const examples = [
     {
@@ -32,14 +43,54 @@ export default function MetaphorClassifier() {
       description: "Words described as piercing the heart"
     }
   ];
+  const funFacts = [
+  "காலம் ஒரு ஆறு போல ஓடுகிறது. (Time flows like a river.)",
+  "அந்த பெண்ணின் கண்கள் நட்சத்திரங்கள் போல மின்னின. (Her eyes sparkled like stars.)",
+  "Words are the dress of thoughts."
+];
 
   const handleInputChange = (e) => {
     setInputText(e.target.value);
   };
+  const handleExportPDF = async () => {
+  const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait mode, millimeters, A4 size
 
+  // Capture the charts section
+  const chartsSection = document.querySelector('.charts-section'); // Add a class to the charts container
+  const chartsCanvas = await html2canvas(chartsSection, { scale: 2 });
+  const chartsImage = chartsCanvas.toDataURL('image/png');
+
+  // Add the charts image to the PDF
+  pdf.addImage(chartsImage, 'PNG', 10, 10, 190, 100); // Position and size on the PDF
+
+  // Capture the results section
+  const resultsSection = document.querySelector('.results-section'); // Add a class to the results container
+  const resultsCanvas = await html2canvas(resultsSection, { scale: 2 });
+  const resultsImage = resultsCanvas.toDataURL('image/png');
+
+  // Add the results image to the PDF
+  pdf.addPage(); // Add a new page for results
+  pdf.addImage(resultsImage, 'PNG', 10, 10, 190, 100);
+
+  // Save the PDF
+  pdf.save('analysis.pdf');
+};
   const handleExampleClick = (example) => {
     setInputText(example.text);
   };
+
+  // Helper to split Tamil text into sentences (handles newlines and punctuation)
+  function splitSentences(text) {
+    // Split by newline, then by Tamil/English sentence-ending punctuation
+    return text
+      .split('\n')
+      .flatMap(line =>
+        line
+          .split(/(?<=[\.!?।]|[.!?])\s+/)
+          .map(s => s.trim())
+          .filter(Boolean)
+      );
+  }
 
   const handleAnalyzeClick = async () => {
     if (!inputText.trim()) {
@@ -53,14 +104,56 @@ export default function MetaphorClassifier() {
     setStats(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/predict', {
-        text: inputText
-      });
+      // Split input into sentences
+      const sentences = splitSentences(inputText);
 
-      setResults(response.data.results);
-      setStats(response.data.stats);
+      // Analyze each sentence (parallel requests)
+      const promises = sentences.map(sentence =>
+        axios.post('http://localhost:5000/api/predict', { text: sentence })
+          .then(response => {
+            // Normalize response
+            if (response.data.results) {
+              return response.data.results[0];
+            } else if (typeof response.data.is_metaphor !== "undefined") {
+              return {
+                text: sentence,
+                label: response.data.is_metaphor ? "Metaphor" : "Literal",
+                confidence: response.data.confidence
+              };
+            } else {
+              return {
+                text: sentence,
+                label: "Unknown",
+                confidence: 0
+              };
+            }
+          })
+          .catch(() => ({
+            text: sentence,
+            label: "Error",
+            confidence: 0
+          }))
+      );
+
+      const allResults = await Promise.all(promises);
+
+      // Compute stats
+      const metaphorCount = allResults.filter(r => r.label === "Metaphor").length;
+      const literalCount = allResults.filter(r => r.label === "Literal").length;
+      const avgConfidence = allResults.length
+        ? allResults.reduce((sum, r) => sum + (r.confidence || 0), 0) / allResults.length
+        : 0;
+      const highConfidenceCount = allResults.filter(r => (r.confidence || 0) > 0.85).length;
+
+      setResults(allResults);
+      setStats({
+        total_sentences: allResults.length,
+        metaphor_count: metaphorCount,
+        literal_count: literalCount,
+        average_confidence: avgConfidence,
+        high_confidence_count: highConfidenceCount
+      });
     } catch (error) {
-      console.error('Error analyzing text:', error);
       setError('Failed to analyze text. Please try again or check if the server is running.');
       
       // Fallback demo results for testing UI when server is not available
@@ -103,44 +196,109 @@ export default function MetaphorClassifier() {
     }
   };
 
+  // Filtering logic
+ // Filtering logic
+const filteredResults = results.filter(r => {
+  const labelMatch =
+    filterLabel === 'all' ||
+    (filterLabel === 'metaphor' && r.label === 'Metaphor') ||
+    (filterLabel === 'literal' && r.label === 'Literal');
+  const conf = r.confidence || 0;
+  const confMatch = conf >= filterConfidence[0] && conf <= filterConfidence[1];
+  const searchMatch = r.text.toLowerCase().includes(searchKeyword.toLowerCase()); // Check if the text includes the search keyword
+  return labelMatch && confMatch && searchMatch;
+});
+
+  // Pagination logic
+
+
+  // Table sorting
+  const [sortCol, setSortCol] = useState('index');
+  const [sortDir, setSortDir] = useState('asc');
+  // Sorting logic
+// Sorting logic
+const sortedResults = useMemo(() => {
+  let arr = [...filteredResults];
+
+  if (sortCol === 'confidence') {
+    // Sort by confidence
+    arr.sort((a, b) =>
+      sortDir === 'asc'
+        ? (a.confidence || 0) - (b.confidence || 0)
+        : (b.confidence || 0) - (a.confidence || 0)
+    );
+  } else if (sortCol === 'label') {
+    // Sort by label
+    arr.sort((a, b) =>
+      sortDir === 'asc'
+        ? a.label.localeCompare(b.label)
+        : b.label.localeCompare(a.label)
+    );
+  }
+
+  return arr;
+}, [filteredResults, sortCol, sortDir]);
+
+// Pagination logic
+const totalPages = Math.max(1, Math.ceil(sortedResults.length / pageSize)); // Use sortedResults for total pages
+const pagedResults = useMemo(() => {
+  const start = (page - 1) * pageSize;
+  return sortedResults.slice(start, start + pageSize); // Use sortedResults for pagination
+}, [sortedResults, page, pageSize]);
+
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
-      {/* Header */}
-      <header className="bg-amber-800 text-white p-6">
-        <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100">
+      {/* Header with subtle gradient and shadow */}
+      <header className="bg-gradient-to-r from-amber-900 to-amber-700 text-white p-6 shadow-lg">
+        <div className="max-w-full mx-auto px-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Tamil Metaphor Classifier</h1>
-            <Link to="/" className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors">
+            <h1 className="text-3xl font-bold tracking-tight">
+              Tamil Metaphor <span className="text-amber-300">Classifier</span>
+            </h1>
+            <Link to="/" className="bg-black/20 hover:bg-black/30 px-4 py-2 rounded-lg transition-colors border border-white/10 shadow-sm">
               Back to Home
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-full mx-auto p-6 space-y-8">
         {error && (
-          <div className="bg-red-900 border-l-4 border-red-500 text-red-100 p-4 mb-6 rounded">
+          <div className="bg-red-900/80 border-l-4 border-red-500 text-red-100 p-4 mb-6 rounded-lg backdrop-blur-sm animate-pulse">
             <p>{error}</p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Input Section */}
-          <div className="md:col-span-2">
-            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-md p-6 mb-8">
-              <h2 className="text-xl font-bold mb-4 text-white">Enter Tamil Text</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Input Section with glassy effect */}
+          <div className="lg:col-span-3">
+            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 mb-8 transition-all duration-300 hover:shadow-amber-900/20">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                    <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+                  </svg>
+                  Enter Tamil Text
+                </h2>
+                {isLoading && (
+                  <span className="text-xs bg-amber-800/30 text-amber-300 px-2 py-1 rounded-full animate-pulse">
+                    Processing...
+                  </span>
+                )}
+              </div>
               <textarea
-                className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg p-3 h-40 font-tamil"
+                className="w-full border border-gray-600 bg-gray-700/70 text-white rounded-lg p-4 h-40 font-tamil focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all shadow-inner"
                 value={inputText}
                 onChange={handleInputChange}
                 placeholder="Enter Tamil text to analyze for metaphors..."
               />
-              <p className="text-xs text-gray-400 mt-1 mb-4">
+              <p className="text-xs text-gray-400 mt-2 mb-4 italic">
                 You can enter multiple lines of text. Each line will be analyzed separately.
               </p>
               
               <button
-                className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center justify-center"
+                className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white px-6 py-3 rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center font-medium"
                 onClick={handleAnalyzeClick}
                 disabled={isLoading}
               >
@@ -153,67 +311,690 @@ export default function MetaphorClassifier() {
                     Analyzing...
                   </span>
                 ) : (
-                  'Analyze Text'
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                    </svg>
+                    Analyze Text
+                  </>
                 )}
               </button>
             </div>
             
-            {/* Results Section */}
-            {results.length > 0 && (
-              <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4 text-white">Analysis Results</h2>
-                
-                <div className="space-y-4">
-                  {results.map((result, index) => (
-                    <div 
-                      key={index} 
-                      className={`border-l-4 ${
-                        result.label === 'Metaphor' ? 'border-amber-500 bg-gray-700' : 'border-gray-500 bg-gray-700'
-                      } p-4 rounded-lg`}
-                    >
-                      <p className="font-tamil text-lg mb-2 text-white">{result.text}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <span className={`font-medium ${
-                            result.label === 'Metaphor' ? 'text-amber-400' : 'text-gray-300'
-                          }`}>
-                            {result.label}
-                          </span>
-                          <span className="mx-2 text-gray-500">|</span>
-                          <span className="text-sm text-gray-400">
-                            Confidence: {(result.confidence * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                        
-                        {result.label === 'Metaphor' && (
-                          <span className="bg-amber-900 text-amber-200 text-xs px-2 py-1 rounded-full">
-                            உருவகம்
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+           {/* Enhanced Filter & Controls Panel */}
+{results.length > 0 && (
+  <div className="mb-6 p-5 bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-gray-700 shadow-xl">
+    
+    <div className="flex flex-wrap gap-6 items-center justify-between">
+      
+      {/* Filter by Label */}
+      <div className="flex flex-col space-y-1">
+        <label className="text-sm text-gray-300 font-medium">Filter by Label</label>
+        <select
+          className="bg-gray-800 border border-gray-600 text-white rounded-md px-3 py-1.5 shadow-inner focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          value={filterLabel}
+          onChange={e => setFilterLabel(e.target.value)}
+        >
+          <option value="all">All Labels</option>
+          <option value="metaphor">Metaphor Only</option>
+          <option value="literal">Literal Only</option>
+        </select>
+      </div>
+
+      {/* Confidence Range Filter */}
+      <div className="flex flex-col space-y-1">
+        <label className="text-sm text-gray-300 font-medium">Confidence Range</label>
+        <div className="flex items-center space-x-2">
+          <input
+            type="number"
+            min={0} max={1} step={0.01}
+            value={filterConfidence[0]}
+            onChange={e => setFilterConfidence([parseFloat(e.target.value), filterConfidence[1]])}
+            className="bg-gray-800 border border-gray-600 text-white rounded-md px-2 py-1.5 w-16 shadow-inner"
+          />
+          <span className="text-gray-400">—</span>
+          <input
+            type="number"
+            min={0} max={1} step={0.01}
+            value={filterConfidence[1]}
+            onChange={e => setFilterConfidence([filterConfidence[0], parseFloat(e.target.value)])}
+            className="bg-gray-800 border border-gray-600 text-white rounded-md px-2 py-1.5 w-16 shadow-inner"
+          />
+        </div>
+      </div>
+
+      {/* Search by Keyword */}
+      <div className="flex flex-col space-y-1">
+        <label className="text-sm text-gray-300 font-medium">Search</label>
+        <input
+          type="text"
+          placeholder="Search sentences..."
+          value={searchKeyword}
+          onChange={e => setSearchKeyword(e.target.value)}
+          className="bg-gray-800 border border-gray-600 text-white rounded-md px-3 py-1.5 shadow-inner w-40 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+        />
+      </div>
+
+      {/* Sort Controls */}
+      <div className="flex flex-col space-y-1">
+        <label className="text-sm text-gray-300 font-medium">Sort By</label>
+        <div className="flex bg-gray-800 rounded-md p-1 shadow-inner">
+          <button
+            className={`px-3 py-1 rounded-md text-sm ${sortCol === 'confidence' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
+            onClick={() => { setSortCol('confidence'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); }}
+          >
+            Confidence
+          </button>
+          <button
+            className={`px-3 py-1 rounded-md text-sm ${sortCol === 'label' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
+            onClick={() => { setSortCol('label'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); }}
+          >
+            Label
+          </button>
+        </div>
+      </div>
+
+      {/* View Mode Toggle */}
+      <div className="flex flex-col space-y-1">
+        <label className="text-sm text-gray-300 font-medium">View Mode</label>
+        <div className="flex bg-gray-800 rounded-md p-1 shadow-inner">
+          <button
+            className={`px-3 py-1 rounded-md text-sm ${viewMode === 'card' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
+            onClick={() => setViewMode('card')}
+          >
+            Card
+          </button>
+          <button
+            className={`px-3 py-1 rounded-md text-sm ${viewMode === 'table' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
+            onClick={() => setViewMode('table')}
+          >
+            Table
+          </button>
+        </div>
+      </div>
+
+      {/* Page Navigation */}
+      <div className="flex flex-col space-y-1">
+        <label className="text-sm text-gray-300 font-medium">Page</label>
+        <div className="flex items-center space-x-2">
+          <button
+            className="bg-gray-800 border border-gray-600 text-white rounded-md p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+          >
+            ◀
+          </button>
+          <span className="text-gray-400 text-sm">Page {page} of {totalPages}</span>
+          <button
+            className="bg-gray-800 border border-gray-600 text-white rounded-md p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={page >= totalPages}
+            onClick={() => setPage(page + 1)}
+          >
+            ▶
+          </button>
+        </div>
+      </div>
+      
+    </div>
+
+    {/* Filter Summary & Reset/Copy */}
+    <div className="mt-4 pt-3 border-t border-gray-700 flex flex-wrap justify-between items-center gap-3">
+      <div className="text-xs text-gray-400">
+        Showing <span className="font-medium text-amber-400">{pagedResults.length}</span> of <span className="font-medium text-white">{filteredResults.length}</span> sentences
+        {filteredResults.length < results.length && (<span> (filtered from {results.length} total)</span>)}
+      </div>
+
+      <div className="flex gap-2">
+        {filteredResults.length > 0 && (
+          <>
+            <button
+              className="text-xs bg-amber-700/50 hover:bg-amber-700/70 text-amber-200 px-2 py-1 rounded flex items-center transition-colors"
+              onClick={() => {
+                setFilterLabel('all');
+                setFilterConfidence([0, 1]);
+                setSearchKeyword('');
+                setPage(1);
+              }}
+            >
+              Reset Filters
+            </button>
+
+            <button
+  className="text-xs bg-green-700/50 hover:bg-green-700/70 text-green-200 px-2 py-1 rounded flex items-center transition-colors"
+  onClick={() => {
+    // Copy only the filtered results
+    const textToCopy = filteredResults.map(r => r.text).join('\n');
+    navigator.clipboard.writeText(textToCopy);
+    setCopyStatus(true);
+    setTimeout(() => setCopyStatus(false), 1500); // Reset copy status after 1.5 seconds
+  }}
+>
+  {copyStatus ? '✅ Copied' : '📋 Copy All'}
+</button>
+          </>
+        )}
+      </div>
+    </div>
+
+  </div>
+)}
+
+            {/* Card View */}
+{viewMode === 'card' && Array.isArray(pagedResults) && pagedResults.length > 0 && (
+  <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-amber-900/40">
+    <div className="flex justify-between items-center mb-6">
+      <h2 className="text-2xl font-bold text-amber-400 flex items-center">
+        Analysis Results
+      </h2>
+      <div className="text-xs text-gray-400 flex space-x-2">
+        <span className="bg-amber-900/30 text-amber-300 px-2 py-0.5 rounded">{stats.metaphor_count} Metaphors</span>
+        <span className="bg-gray-700/50 text-gray-300 px-2 py-0.5 rounded">{stats.literal_count} Literal</span>
+      </div>
+    </div>
+
+    <div className="grid md:grid-cols-2 gap-6">
+      
+      {pagedResults.map((result, index) => {
+        
+
+        const handleCopy = () => {
+          navigator.clipboard.writeText(result.text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500); // show tick for 1.5s
+        };
+
+        return (
+          <div
+            key={index}
+            className={`border-l-4 p-4 rounded-xl shadow-md transition-transform duration-300 hover:scale-105 hover:shadow-lg 
+              ${result.label === 'Metaphor' 
+                ? 'border-amber-500 bg-gradient-to-r from-amber-900/30 to-gray-800/50' 
+                : 'border-gray-500 bg-gray-800/50'}`
+            }
+          >
+            <div className="flex justify-between items-start mb-2">
+              <p className="font-tamil text-lg text-gray-100 leading-relaxed flex-1">{result.text}</p>
+              <button
+                onClick={handleCopy}
+                className="ml-3 text-gray-400 hover:text-amber-400 transition-colors flex items-center"
+                title="Copy sentence"
+              >
+                {copied ? '✅' : '📋'}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <span className={`px-2 py-0.5 rounded font-medium text-xs ${result.label === 'Metaphor' ? 'bg-amber-900/50 text-amber-300' : 'bg-gray-600/50 text-gray-300'}`}>
+                  {result.label}
+                </span>
+
+                <div className="flex items-center space-x-2">
+                  <div className="w-24 h-3 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-3 rounded-full ${result.confidence > 0.7 ? 'bg-green-500' : result.confidence > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                      style={{ width: `${result.confidence * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-sm text-gray-300">{(result.confidence * 100).toFixed(1)}%</span>
                 </div>
               </div>
-            )}
+
+              {result.label === 'Metaphor' && (
+                <span className="bg-amber-900/60 text-amber-200 text-xs px-2 py-1 rounded-full border border-amber-700/50">
+                  உருவகம்
+                </span>
+              )}
+            </div>
           </div>
+        );
+      })}
+    </div>
+  </div>
+)}
+
+{/* Table View */}
+{viewMode === 'table' && Array.isArray(sortedResults) && sortedResults.length > 0 && (
+  <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl p-6 overflow-x-auto transition-all duration-300 hover:shadow-amber-900/40">
+    <h2 className="text-2xl font-bold mb-4 text-amber-400 flex items-center">
+      Tabular View
+    </h2>
+
+    <table className="min-w-full text-sm border-collapse">
+      <thead>
+        <tr className="bg-gray-800 text-gray-300 border-b border-gray-700">
+          <th className="px-4 py-3 text-left">#</th>
+          <th className="px-4 py-3 text-left">Sentence</th>
+          <th className="px-4 py-3 text-left">Label</th>
+          <th className="px-4 py-3 text-left">Confidence</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-700">
+        {sortedResults.slice((page-1)*pageSize, page*pageSize).map((result, idx) => {
           
-          {/* Sidebar */}
-          <div className="md:col-span-1">
+
+          const handleCopy = () => {
+            navigator.clipboard.writeText(result.text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          };
+
+          return (
+            <tr key={idx} className={`${result.label === 'Metaphor' ? 'bg-amber-900/20 hover:bg-amber-900/30' : 'hover:bg-gray-800/50'} transition-colors`}>
+              <td className="px-4 py-3 font-medium">{(page-1)*pageSize + idx + 1}</td>
+              <td className="px-4 py-3 font-tamil text-gray-100 flex justify-between items-center">
+                <span>{result.text}</span>
+                <button onClick={handleCopy} className="ml-2 text-gray-400 hover:text-amber-400 transition-colors text-sm">
+                  {copied ? '✅' : '📋'}
+                </button>
+              </td>
+              <td className="px-4 py-3">
+                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${result.label === 'Metaphor' ? 'bg-amber-900/70 text-amber-200' : 'bg-gray-600 text-gray-300'}`}>
+                  {result.label}
+                </span>
+              </td>
+              <td className="px-4 py-3">
+                <div className="flex items-center">
+                  <div className="w-28 h-3 bg-gray-700 rounded-full mr-2 overflow-hidden">
+                    <div
+                      className={`h-3 rounded-full ${result.confidence > 0.7 ? 'bg-green-500' : result.confidence > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                      style={{ width: `${result.confidence * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-gray-300">{(result.confidence * 100).toFixed(1)}%</span>
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+)}
+            {/* Stats Section with enhanced styling */}
+{stats && (
+  <div className="bg-gray-900/80 backdrop-blur-lg border border-gray-700 rounded-2xl shadow-2xl p-8 transition-all duration-300 hover:shadow-amber-900/30 mt-8">
+    <h2 className="text-2xl font-bold mb-6 text-white flex items-center justify-between">
+      <span className="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+          <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+        </svg>
+        Analysis Dashboard
+      </span>
+      <span className="text-sm text-gray-400">Updated {new Date().toLocaleDateString()}</span>
+    </h2>
+
+    <div className="space-y-8">
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="bg-amber-900/30 rounded-xl p-4 border border-amber-800/30 hover:scale-105 transition">
+          <div className="text-3xl font-bold text-amber-300">{stats.metaphor_count}</div>
+          <div className="text-xs text-amber-200/70">Metaphors</div>
+        </div>
+        <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600/30 hover:scale-105 transition">
+          <div className="text-3xl font-bold text-gray-300">{stats.literal_count}</div>
+          <div className="text-xs text-gray-400">Literal</div>
+        </div>
+        <div className="bg-indigo-900/30 rounded-xl p-4 border border-indigo-800/30 hover:scale-105 transition">
+          <div className="text-3xl font-bold text-indigo-300">{stats.total_sentences}</div>
+          <div className="text-xs text-indigo-200/70">Total Sentences</div>
+        </div>
+        <div className="bg-green-900/30 rounded-xl p-4 border border-green-800/30 hover:scale-105 transition">
+          <div className="text-3xl font-bold text-green-300">{(stats.average_confidence * 100).toFixed(1)}%</div>
+          <div className="text-xs text-green-200/70">Avg. Confidence</div>
+        </div>
+      </div>
+
+      {/* Pie chart */}
+      <div>
+        <h3 className="font-medium text-gray-300 mb-3">Metaphor vs Literal Distribution</h3>
+        <div className="h-56">
+          <Plot
+            data={[
+              {
+                type: 'pie',
+                values: [stats.metaphor_count, stats.literal_count],
+                labels: ['Metaphor', 'Literal'],
+                marker: { colors: ['#f59e0b', '#6b7280'] },
+                hole: 0.4
+              }
+            ]}
+            layout={{
+              margin: { t: 10, r: 0, l: 0, b: 0 },
+              showlegend: true,
+              legend: { font: { color: '#e5e7eb' } },
+              paper_bgcolor: 'rgba(0,0,0,0)',
+              plot_bgcolor: 'rgba(0,0,0,0)'
+            }}
+            config={{ displayModeBar: false }}
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div>
+      </div>
+
+      {/* Confidence bar */}
+      <div>
+        <h3 className="font-medium text-gray-300 mb-3">Confidence per Sentence</h3>
+        <div className="h-56">
+          <Plot
+            data={[
+              {
+                type: 'bar',
+                x: results.map((r, i) => `S${i + 1}`),
+                y: results.map(r => Math.round((r.confidence || 0) * 100)),
+                marker: { color: results.map(r => r.label === "Metaphor" ? '#f59e0b' : '#6b7280') }
+              }
+            ]}
+            layout={{
+              margin: { t: 20, r: 0, l: 40, b: 40 },
+              paper_bgcolor: 'rgba(0,0,0,0)',
+              plot_bgcolor: 'rgba(0,0,0,0)',
+              font: { color: '#e5e7eb' },
+              xaxis: { title: 'Sentence', tickangle: -45 },
+              yaxis: { title: 'Confidence (%)', range: [0, 100] }
+            }}
+            config={{ displayModeBar: false }}
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div>
+      </div>
+
+      {/* NEW: Trend line */}
+      <div>
+        <h3 className="font-medium text-gray-300 mb-3">Confidence Trend (Line Chart)</h3>
+        <div className="h-56">
+          <Plot
+            data={[
+              {
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: results.map((r, i) => i + 1),
+                y: results.map(r => Math.round((r.confidence || 0) * 100)),
+                line: { color: '#10b981' }
+              }
+            ]}
+            layout={{
+              margin: { t: 20, r: 0, l: 40, b: 40 },
+              paper_bgcolor: 'rgba(0,0,0,0)',
+              plot_bgcolor: 'rgba(0,0,0,0)',
+              font: { color: '#e5e7eb' },
+              xaxis: { title: 'Sentence Index' },
+              yaxis: { title: 'Confidence (%)', range: [0, 100] }
+            }}
+            config={{ displayModeBar: false }}
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div>
+      </div>
+
+      
+      
+
+     
+      {/* NEW: Radar chart for overall profile */}
+<div>
+  <h3 className="font-medium text-gray-300 mb-3">Overall Profile (Radar)</h3>
+  <div className="h-96 md:h-[500px]"> {/* increased height */}
+    <Plot
+      data={[
+        {
+          type: 'scatterpolar',
+          r: [
+            stats.metaphor_count,
+            stats.literal_count,
+            stats.total_sentences,
+            (stats.average_confidence * 100).toFixed(1)
+          ],
+          theta: ['Metaphor', 'Literal', 'Total', 'Confidence'],
+          fill: 'toself',
+          line: { color: '#f59e0b' }
+        }
+      ]}
+      layout={{
+        polar: {
+          radialaxis: { visible: true, range: [0, Math.max(stats.total_sentences, 100)] }
+        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#f59e0b' }
+      }}
+      config={{ displayModeBar: false }}
+      style={{ width: '100%', height: '100%' }} // fills the parent div
+    />
+  </div>
+</div>
+
+
+<div>
+  <h3 className="font-medium text-gray-300 mb-3">Confidence Distribution by Label</h3>
+  <div className="h-56">
+    <Plot
+      data={[
+        {
+          type: 'box',
+          y: results.filter(r => r.label === 'Metaphor').map(r => Math.round((r.confidence || 0) * 100)),
+          name: 'Metaphor',
+          marker: { color: '#f59e0b' }
+        },
+        {
+          type: 'box',
+          y: results.filter(r => r.label === 'Literal').map(r => Math.round((r.confidence || 0) * 100)),
+          name: 'Literal',
+          marker: { color: '#6b7280' }
+        }
+      ]}
+      layout={{
+        margin: { t: 20, r: 0, l: 40, b: 40 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#e5e7eb' },
+        yaxis: { title: 'Confidence (%)', range: [0, 100] }
+      }}
+      config={{ displayModeBar: false }}
+      style={{ width: '100%', height: '100%' }}
+    />
+  </div>
+</div>
+<div>
+  <h3 className="font-medium text-gray-300 mb-3">Confidence vs Sentence Length</h3>
+  <div className="h-56">
+    <Plot
+      data={[
+        {
+          type: 'scatter',
+          mode: 'markers',
+          x: results.map(r => r.text.length), // Sentence length
+          y: results.map(r => Math.round((r.confidence || 0) * 100)), // Confidence
+          marker: { color: '#6366f1', size: 8 }
+        }
+      ]}
+      layout={{
+        margin: { t: 20, r: 0, l: 40, b: 40 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#e5e7eb' },
+        xaxis: { title: 'Sentence Length' },
+        yaxis: { title: 'Confidence (%)', range: [0, 100] }
+      }}
+      config={{ displayModeBar: false }}
+      style={{ width: '100%', height: '100%' }}
+    />
+  </div>
+</div>
+<div>
+  <h3 className="font-medium text-gray-300 mb-3">Label Distribution Over Confidence Ranges</h3>
+  <div className="h-56">
+    <Plot
+      data={[
+        {
+          type: 'bar',
+          x: ['0-20%', '20-40%', '40-60%', '60-80%', '80-100%'],
+          y: [
+            results.filter(r => r.label === 'Metaphor' && r.confidence <= 0.2).length,
+            results.filter(r => r.label === 'Metaphor' && r.confidence > 0.2 && r.confidence <= 0.4).length,
+            results.filter(r => r.label === 'Metaphor' && r.confidence > 0.4 && r.confidence <= 0.6).length,
+            results.filter(r => r.label === 'Metaphor' && r.confidence > 0.6 && r.confidence <= 0.8).length,
+            results.filter(r => r.label === 'Metaphor' && r.confidence > 0.8).length
+          ],
+          name: 'Metaphor',
+          marker: { color: '#f59e0b' }
+        },
+        {
+          type: 'bar',
+          x: ['0-20%', '20-40%', '40-60%', '60-80%', '80-100%'],
+          y: [
+            results.filter(r => r.label === 'Literal' && r.confidence <= 0.2).length,
+            results.filter(r => r.label === 'Literal' && r.confidence > 0.2 && r.confidence <= 0.4).length,
+            results.filter(r => r.label === 'Literal' && r.confidence > 0.4 && r.confidence <= 0.6).length,
+            results.filter(r => r.label === 'Literal' && r.confidence > 0.6 && r.confidence <= 0.8).length,
+            results.filter(r => r.label === 'Literal' && r.confidence > 0.8).length
+          ],
+          name: 'Literal',
+          marker: { color: '#6b7280' }
+        }
+      ]}
+      layout={{
+        barmode: 'stack',
+        margin: { t: 20, r: 0, l: 40, b: 40 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#e5e7eb' },
+        xaxis: { title: 'Confidence Range' },
+        yaxis: { title: 'Count' }
+      }}
+      config={{ displayModeBar: false }}
+      style={{ width: '100%', height: '100%' }}
+    />
+  </div>
+</div>
+<div>
+  <h3 className="font-medium text-gray-300 mb-3">Sentence Count by Label</h3>
+  <div className="h-56">
+    <Plot
+      data={[
+        {
+          type: 'bar',
+          x: ['Metaphor', 'Literal'],
+          y: [stats.metaphor_count, stats.literal_count],
+          marker: { color: ['#f59e0b', '#6b7280'] }
+        }
+      ]}
+      layout={{
+        margin: { t: 20, r: 0, l: 40, b: 40 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#e5e7eb' },
+        xaxis: { title: 'Label' },
+        yaxis: { title: 'Count' }
+      }}
+      config={{ displayModeBar: false }}
+      style={{ width: '100%', height: '100%' }}
+    />
+  </div>
+</div>
+
+{/* Explanatory Analysis */}
+{/* Explanatory Analysis Table */}
+<div className="my-6">
+  <h3 className="text-2xl font-bold text-white mb-5 border-b border-gray-600 pb-2">explanatory analysis</h3>
+
+  <div className="overflow-x-auto rounded-2xl shadow-lg bg-gray-900/80">
+    <table className="min-w-full text-left text-gray-200 text-sm">
+      <thead className="bg-gray-800/90">
+        <tr>
+          <th className="px-6 py-3">Metric</th>
+          <th className="px-6 py-3">Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
+          <td className="px-6 py-4">Total Sentences</td>
+          <td className="px-6 py-4 font-semibold text-indigo-400">{stats.total_sentences}</td>
+        </tr>
+        <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
+          <td className="px-6 py-4">Metaphors</td>
+          <td className="px-6 py-4 font-semibold text-purple-400">{stats.metaphor_count}</td>
+        </tr>
+        <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
+          <td className="px-6 py-4">Literal Sentences</td>
+          <td className="px-6 py-4 font-semibold text-green-400">{stats.literal_count}</td>
+        </tr>
+        <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
+          <td className="px-6 py-4">Average Confidence</td>
+          <td className="px-6 py-4 font-semibold text-yellow-400">{(stats.average_confidence * 100).toFixed(1)}%</td>
+        </tr>
+        <tr className="hover:bg-gray-800/70 transition">
+          <td className="px-6 py-4">High Confidence Sentences (&gt;85%)</td>
+          <td className="px-6 py-4 font-semibold text-red-400">{stats.high_confidence_count}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p className="text-gray-400 text-xs mt-3 px-6 pb-4">
+      these stats complement the charts above, giving a quick overview of sentence distribution and confidence levels.
+    </p>
+  </div>
+</div>
+
+
+
+
+
+
+{/* NEW: Export Data */}
+<div className="flex justify-end mt-4">
+  <button
+    onClick={() => {
+      const csv = results
+        .map((r, i) => `S${i + 1},${r.label},${(r.confidence * 100).toFixed(1)}`)
+        .join('\n')
+      const blob = new Blob([`Sentence,Label,Confidence\n${csv}`], { type: "text/csv" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "analysis.csv"
+      link.click()
+    }}
+    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-500"
+  >
+    Export CSV
+  </button>
+</div>
+<div className="flex justify-end mt-4">
+  <button
+    onClick={handleExportPDF}
+    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+  >
+    Export PDF
+  </button>
+</div>
+
+    </div>
+  </div>
+)}
+
+</div>
+          
+          {/* Sidebar with enhanced styling */}
+          <div className="lg:col-span-1 space-y-8">
             {/* Examples Section */}
-            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-md p-6 mb-8">
-              <h2 className="text-xl font-bold mb-4 text-white">Examples</h2>
+            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+              <h2 className="text-xl font-bold mb-4 text-white flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 002-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                </svg>
+                Examples
+              </h2>
               <div className="space-y-3">
                 {examples.map((example, index) => (
                   <div 
                     key={index}
-                    className="border border-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-700 transition-colors"
+                    className="border border-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-700/70 transition-all hover:shadow-md hover:border-amber-800/50"
                     onClick={() => handleExampleClick(example)}
                   >
                     <p className="font-tamil text-white">{example.text}</p>
                     <div className="flex justify-between items-center mt-2 text-sm">
-                      <span className={`font-medium ${
-                        example.label.includes('Metaphor') ? 'text-amber-400' : 'text-gray-300'
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                        example.label.includes('Metaphor') ? 'bg-amber-900/70 text-amber-200' : 'bg-gray-600 text-gray-300'
                       }`}>
                         {example.label}
                       </span>
@@ -223,88 +1004,102 @@ export default function MetaphorClassifier() {
                 ))}
               </div>
             </div>
+            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+  <h2 className="text-xl font-bold mb-4 text-white flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+      <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+    </svg>
+    Quick Summary
+  </h2>
+  {stats ? (
+    <ul className="space-y-2 text-gray-300 text-sm">
+      <li>Total Sentences: <span className="font-bold text-indigo-400">{stats.total_sentences}</span></li>
+      <li>Metaphors: <span className="font-bold text-purple-400">{stats.metaphor_count}</span></li>
+      <li>Literals: <span className="font-bold text-green-400">{stats.literal_count}</span></li>
+      <li>Avg. Confidence: <span className="font-bold text-yellow-400">{(stats.average_confidence * 100).toFixed(1)}%</span></li>
+    </ul>
+  ) : (
+    <p className="text-gray-400">No analysis data available.</p>
+  )}
+</div>
+
+
+
+
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+  <h2 className="text-xl font-bold mb-4 text-white flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M3 3a1 1 0 000 2h14a1 1 0 100-2H3zM3 7a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM2 11a2 2 0 002-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+    </svg>
+    Recent Searches
+  </h2>
+  {recentSearches.length > 0 ? (
+    <ul className="space-y-2 text-gray-300 text-sm">
+      {recentSearches.map((search, index) => (
+        <li
+          key={index}
+          className="cursor-pointer hover:text-amber-400 transition"
+          onClick={() => setInputText(search)}
+        >
+          {search.length > 30 ? `${search.slice(0, 30)}...` : search}
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-gray-400">No recent searches.</p>
+  )}
+</div>
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+  <h2 className="text-xl font-bold mb-4 text-white flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M13 7H7v6h6V7z" />
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+    </svg>
+    Tips for Using
+  </h2>
+  <ul className="space-y-2 text-gray-300 text-sm">
+    <li>Enter one or more Tamil sentences for analysis.</li>
+    <li>Use filters to narrow down results by label or confidence.</li>
+    <li>Click "Copy All" to copy filtered results to your clipboard.</li>
+    <li>Switch between "Card" and "Table" views for different layouts.</li>
+  </ul>
+</div>
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+  <h2 className="text-xl font-bold mb-4 text-white flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M18 13a1 1 0 01-1 1H5.414l2.293 2.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 12H17a1 1 0 011 1z" />
+    </svg>
+    Feedback
+  </h2>
+  <textarea
+    className="w-full bg-gray-700 border border-gray-600 text-white rounded-md p-3 text-sm"
+    placeholder="Share your feedback..."
+    rows={4}
+  />
+  <button className="mt-3 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg">
+    Submit Feedback
+  </button>
+</div>
+
+
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+  <h2 className="text-xl font-bold mb-4 text-white flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2H7v-2h2V7h2v2h2v2h-2v2z" />
+    </svg>
+    Fun Fact
+  </h2>
+  <p className="text-gray-300 italic">{funFacts[Math.floor(Math.random() * funFacts.length)]}</p>
+</div>
             
-            {/* Stats Section */}
-            {stats && (
-              <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4 text-white">Statistics</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Total Sentences:</span>
-                    <span className="font-medium text-white">{stats.total_sentences}</span>
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-amber-400">Metaphors:</span>
-                      <span className="font-medium text-amber-400">{stats.metaphor_count}</span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2.5">
-                      <div 
-                        className="bg-amber-500 h-2.5 rounded-full" 
-                        style={{ width: `${(stats.metaphor_count / stats.total_sentences) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-gray-300">Literal:</span>
-                      <span className="font-medium text-gray-300">{stats.literal_count}</span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2.5">
-                      <div 
-                        className="bg-gray-500 h-2.5 rounded-full" 
-                        style={{ width: `${(stats.literal_count / stats.total_sentences) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Average Confidence:</span>
-                    <span className="font-medium text-white">{(stats.average_confidence * 100).toFixed(1)}%</span>
-                  </div>
-                  
-                  <div className="pt-4">
-                    <h3 className="font-medium text-gray-300 mb-2">Distribution</h3>
-                    <div className="h-48 w-full">
-                      {stats && (
-                        <Plot
-                          data={[
-                            {
-                              type: 'pie',
-                              values: [stats.metaphor_count, stats.literal_count],
-                              labels: ['Metaphor', 'Literal'],
-                              marker: {
-                                colors: ['#f59e0b', '#6b7280']
-                              },
-                              hole: 0.4
-                            }
-                          ]}
-                          layout={{
-                            margin: { t: 0, r: 0, l: 0, b: 0 },
-                            showlegend: false,
-                            paper_bgcolor: 'rgba(0,0,0,0)',
-                            plot_bgcolor: 'rgba(0,0,0,0)',
-                            autosize: true,
-                            font: { color: '#e5e7eb' }
-                          }}
-                          config={{ displayModeBar: false }}
-                          style={{ width: '100%', height: '100%' }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
+          
         </div>
       </div>
       
-      <footer className="text-center py-6 text-gray-400 text-sm border-t border-gray-700 mt-8">
-        <p>Tamil Metaphor Classifier &copy; 2025 | Created by Vinushaanth</p>
+      <footer className="text-center py-6 text-gray-400 text-sm border-t border-gray-700 mt-8 bg-gradient-to-r from-gray-900 to-gray-800">
+        <p>Tamil Metaphor Classifier &copy; 2025 | Created with ❤️ by Vinushaanth</p>
       </footer>
     </div>
   );
