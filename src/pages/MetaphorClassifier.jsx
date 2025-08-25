@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo,useRef } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Plot from 'react-plotly.js';
@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
 
 export default function MetaphorClassifier() {
   const [inputText, setInputText] = useState('');
@@ -22,6 +23,8 @@ export default function MetaphorClassifier() {
   const [copyStatus, setCopyStatus] = useState(false); // for copy feedback
   const [recentSearches, setRecentSearches] = useState([]);
   const [feedback, setFeedback] = useState("");
+  const pdfRef = useRef();
+  
   const pageSize = 5;
 
   const examples = [
@@ -80,29 +83,34 @@ const submitFeedback = (feedback) => {
     setInputText(e.target.value);
   };
   const handleExportPDF = async () => {
-  const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait mode, millimeters, A4 size
+    const pdf = new jsPDF("p", "mm", "a4");
 
-  // Capture the charts section
-  const chartsSection = document.querySelector('.charts-section'); // Add a class to the charts container
-  const chartsCanvas = await html2canvas(chartsSection, { scale: 2 });
-  const chartsImage = chartsCanvas.toDataURL('image/png');
+    try {
+      const element = pdfRef.current; // use ref
+      if (!element) throw new Error("PDF content not found");
 
-  // Add the charts image to the PDF
-  pdf.addImage(chartsImage, 'PNG', 10, 10, 190, 100); // Position and size on the PDF
+      const canvas = await html2canvas(element, { scale: 2 });
+      const image = canvas.toDataURL("image/png");
 
-  // Capture the results section
-  const resultsSection = document.querySelector('.results-section'); // Add a class to the results container
-  const resultsCanvas = await html2canvas(resultsSection, { scale: 2 });
-  const resultsImage = resultsCanvas.toDataURL('image/png');
+      const imgProps = pdf.getImageProperties(image);
+      const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-  // Add the results image to the PDF
-  pdf.addPage(); // Add a new page for results
-  pdf.addImage(resultsImage, 'PNG', 10, 10, 190, 100);
+      pdf.addImage(image, "PNG", 10, 10, pdfWidth, pdfHeight);
+      pdf.save("analysis.pdf");
 
-  // Save the PDF
-  pdf.save('analysis.pdf');
-};
-  const handleExampleClick = (example) => {
+      toast.success("PDF exported successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };  const handleExampleClick = (example) => {
     setInputText(example.text);
   };
 
@@ -124,6 +132,10 @@ const submitFeedback = (feedback) => {
       setError('Please enter some Tamil text to analyze');
       return;
     }
+    setRecentSearches((prevSearches) => {
+    const updatedSearches = [inputText, ...prevSearches.filter(search => search !== inputText)];
+    return updatedSearches.slice(0, 5); // Limit to 5 recent searches
+  });
 
     setIsLoading(true);
     setError('');
@@ -235,7 +247,23 @@ const filteredResults = results.filter(r => {
   const searchMatch = r.text.toLowerCase().includes(searchKeyword.toLowerCase()); // Check if the text includes the search keyword
   return labelMatch && confMatch && searchMatch;
 });
+const searchAnalytics = useMemo(() => {
+  const totalSearches = recentSearches.length;
+  const uniqueSearches = new Set(recentSearches).size;
 
+  // Count frequency of each search
+  const searchFrequency = recentSearches.reduce((acc, search) => {
+    acc[search] = (acc[search] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Sort searches by frequency
+  const mostSearched = Object.entries(searchFrequency)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5); // Top 5 most searched phrases
+
+  return { totalSearches, uniqueSearches, mostSearched };
+}, [recentSearches]);
   // Pagination logic
 
 
@@ -316,7 +344,7 @@ const pagedResults = useMemo(() => {
                 )}
               </div>
               <textarea
-                className="w-full border border-gray-600 bg-gray-700/70 text-white rounded-lg p-4 h-40 font-tamil focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all shadow-inner"
+                className="w-full border border-gray-600 bg-gray-700/70 text-white rounded-lg p-4 h-80 font-tamil focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all shadow-inner"
                 value={inputText}
                 onChange={handleInputChange}
                 placeholder="Enter Tamil text to analyze for metaphors..."
@@ -506,7 +534,7 @@ const pagedResults = useMemo(() => {
 
   </div>
 )}
-
+<div className="pdf-content">
             {/* Card View */}
 {viewMode === 'card' && Array.isArray(pagedResults) && pagedResults.length > 0 && (
   <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-amber-900/40">
@@ -961,6 +989,7 @@ const pagedResults = useMemo(() => {
       these stats complement the charts above, giving a quick overview of sentence distribution and confidence levels.
     </p>
   </div>
+  
 </div>
 
 
@@ -1063,20 +1092,82 @@ const pagedResults = useMemo(() => {
     Recent Searches
   </h2>
   {recentSearches.length > 0 ? (
-    <ul className="space-y-2 text-gray-300 text-sm">
-      {recentSearches.map((search, index) => (
-        <li
-          key={index}
-          className="cursor-pointer hover:text-amber-400 transition"
-          onClick={() => setInputText(search)}
-        >
-          {search.length > 30 ? `${search.slice(0, 30)}...` : search}
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="space-y-2 text-gray-300 text-sm">
+        {recentSearches.map((search, index) => (
+          <li
+            key={index}
+            className="flex justify-between items-center bg-gray-700/50 hover:bg-gray-700/70 transition-colors rounded-md px-3 py-2"
+          >
+            <span
+              className="cursor-pointer hover:text-amber-400 transition"
+              onClick={() => setInputText(search)} // Populate input field on click
+            >
+              {search.length > 30 ? `${search.slice(0, 30)}...` : search}
+            </span>
+            <button
+              className="text-red-400 hover:text-red-500 transition text-xs"
+              onClick={() => {
+                setRecentSearches(recentSearches.filter((_, i) => i !== index));
+              }}
+              title="Delete this search"
+            >
+              ✖
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button
+        className="mt-4 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm transition"
+        onClick={() => {
+          Swal.fire({
+            title: 'Are you sure?',
+            text: "This will clear all recent searches!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, clear all!',
+            cancelButtonText: 'Cancel',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              setRecentSearches([]); // Clear all recent searches
+              Swal.fire(
+                'Cleared!',
+                'All recent searches have been cleared.',
+                'success'
+              );
+            }
+          });
+        }}
+      >
+        Clear All
+      </button>
+    </>
   ) : (
     <p className="text-gray-400">No recent searches.</p>
   )}
+</div>
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+  <h2 className="text-xl font-bold mb-4 text-white flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M3 3a1 1 0 000 2h14a1 1 0 100-2H3zM3 7a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM2 11a2 2 0 002-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+    </svg>
+    Search Analytics
+  </h2>
+  <ul className="space-y-2 text-gray-300 text-sm">
+    <li>Total Searches: <span className="font-bold text-indigo-400">{searchAnalytics.totalSearches}</span></li>
+    <li>Unique Searches: <span className="font-bold text-green-400">{searchAnalytics.uniqueSearches}</span></li>
+    <li>Most Searched Phrases:</li>
+    <ul className="ml-4 space-y-1">
+      {searchAnalytics.mostSearched.map(([phrase, count], index) => (
+        <li key={index} className="flex justify-between">
+          <span>{phrase.length > 30 ? `${phrase.slice(0, 30)}...` : phrase}</span>
+          <span className="text-amber-400">{count} times</span>
+        </li>
+      ))}
+    </ul>
+  </ul>
 </div>
 <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
   <h2 className="text-xl font-bold mb-4 text-white flex items-center">
@@ -1093,7 +1184,7 @@ const pagedResults = useMemo(() => {
     <li>Switch between "Card" and "Table" views for different layouts.</li>
   </ul>
 </div>
-const [feedback, setFeedback] = useState("");
+
 
 <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
   <h2 className="text-xl font-bold mb-4 text-white flex items-center">
@@ -1136,6 +1227,7 @@ const [feedback, setFeedback] = useState("");
       <footer className="text-center py-6 text-gray-400 text-sm border-t border-gray-700 mt-8 bg-gradient-to-r from-gray-900 to-gray-800">
         <p>Tamil Metaphor Classifier &copy; 2025 | Created with ❤️ by Vinushaanth</p>
       </footer>
+    </div>
     </div>
   );
 }
