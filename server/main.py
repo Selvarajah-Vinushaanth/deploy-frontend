@@ -93,7 +93,7 @@ async def create_lyrics(request: LyricsRequest):
         main_lyric = generate_lyrics_text(motion=request.motion, seed=request.seed)
 
         # generate 4 more lyrics (all considered as lyrics)
-        more_lyrics = [generate_lyrics_text(motion=request.motion, seed="") for _ in range(4)]
+        more_lyrics = [generate_lyrics_text(motion=request.motion, seed="") for _ in range(2)]
 
         # combine all lyrics in a single list
         all_lyrics = [main_lyric] + more_lyrics

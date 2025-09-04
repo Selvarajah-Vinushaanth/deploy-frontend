@@ -560,20 +560,43 @@ const pagedResults = useMemo(() => {
 
                 <div className="flex items-center space-x-2">
                   <div className="w-24 h-3 bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-3 rounded-full ${result.confidence > 0.7 ? 'bg-green-500' : result.confidence > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                      style={{ width: `${result.confidence * 100}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-gray-300">{(result.confidence * 100).toFixed(1)}%</span>
+  <div
+    className={`h-3 rounded-full ${
+      result.label === 'Literal'
+        ? (100 - result.confidence * 100) > 70
+          ? 'bg-red-500'
+          : (100 - result.confidence * 100) > 40
+            ? 'bg-yellow-500'
+            : 'bg-green-500'
+        : result.confidence > 0.7
+          ? 'bg-green-500'
+          : result.confidence > 0.4
+            ? 'bg-yellow-500'
+            : 'bg-red-500'
+    }`}
+    style={{
+      width: `${
+        result.label === 'Literal'
+          ? (100 - result.confidence * 100)
+          : (result.confidence * 100)
+      }%`
+    }}
+  ></div>
+</div>
+                  {/* <span className="text-sm text-gray-300">{(result.confidence * 100).toFixed(1)}%</span> */}
+                  <span className="text-sm text-gray-300">
+                      {result.label === 'Literal'
+                              ? (100 - (result.confidence * 100)).toFixed(1) + '%'
+                                : (result.confidence * 100).toFixed(1) + '%'}
+                    </span>
                 </div>
               </div>
 
-              {result.label === 'Metaphor' && (
-                <span className="bg-amber-900/60 text-amber-200 text-xs px-2 py-1 rounded-full border border-amber-700/50">
-                  உருவகம்
-                </span>
-              )}
+              {/* {result.label === 'Metaphor' && (
+                // <span className="bg-amber-900/60 text-amber-200 text-xs px-2 py-1 rounded-full border border-amber-700/50">
+                //   உருவகம்
+                // </span>
+              )} */}
             </div>
           </div>
         );
@@ -624,13 +647,37 @@ const pagedResults = useMemo(() => {
               </td>
               <td className="px-4 py-3">
                 <div className="flex items-center">
-                  <div className="w-28 h-3 bg-gray-700 rounded-full mr-2 overflow-hidden">
-                    <div
-                      className={`h-3 rounded-full ${result.confidence > 0.7 ? 'bg-green-500' : result.confidence > 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                      style={{ width: `${result.confidence * 100}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-gray-300">{(result.confidence * 100).toFixed(1)}%</span>
+                  <div className="w-24 h-3 bg-gray-700 rounded-full overflow-hidden">
+  <div
+    className={`h-3 rounded-full ${
+      result.label === 'Literal'
+        ? (100 - result.confidence * 100) > 70
+          ? 'bg-red-500'
+          : (100 - result.confidence * 100) > 40
+            ? 'bg-yellow-500'
+            : 'bg-green-500'
+        : result.confidence > 0.7
+          ? 'bg-green-500'
+          : result.confidence > 0.4
+            ? 'bg-yellow-500'
+            : 'bg-red-500'
+    }`}
+    style={{
+      width: `${
+        result.label === 'Literal'
+          ? (100 - result.confidence * 100)
+          : (result.confidence * 100)
+      }%`
+    }}
+  ></div>
+</div>
+                  {/* <span className="text-gray-300">{(result.confidence * 100).toFixed(1)}%</span>
+                   */}
+                   <span className="text-sm text-gray-300">
+  {result.label === 'Literal'
+    ? (100 - (result.confidence * 100)).toFixed(1) + '%'
+    : (result.confidence * 100).toFixed(1) + '%'}
+</span>
                 </div>
               </td>
             </tr>

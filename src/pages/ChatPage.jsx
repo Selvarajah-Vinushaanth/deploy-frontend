@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios'; // You'll need to install axios: npm install axios
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([
@@ -16,6 +17,7 @@ export default function ChatPage() {
   const [batchResults, setBatchResults] = useState(null); // For multi-line batch
   const [chartData, setChartData] = useState(null); // For chart summary
   const [batchPage, setBatchPage] = useState(1); // pagination for batch results
+  const [showLyricOptionsPanel, setShowLyricOptionsPanel] = useState(false);
   const batchPageSize = 5;
   const messagesEndRef = useRef(null);
   
@@ -27,9 +29,7 @@ export default function ChatPage() {
   
   // New states for lyric generator options
   const [showLyricOptions, setShowLyricOptions] = useState(false);
-  const [lyricTheme, setLyricTheme] = useState("");
-  const [lyricStyle, setLyricStyle] = useState("pop");
-  const [lyricLength, setLyricLength] = useState("medium");
+  const [lyricEmotion, setLyricEmotion] = useState("calm");
   const [lyricSeed, setLyricSeed] = useState("");
   const [lyricSuggestions, setLyricSuggestions] = useState([
     "Under the moonlight we danced, swaying to the rhythm of our hearts.",
@@ -54,9 +54,9 @@ export default function ChatPage() {
       'Is "அவனது வார்த்தைகள் தேனாக இனித்தன" metaphorical?'
     ],
     'lyric-generator': [
-      'Generate a love song theme: romance style: romantic length: medium seed: "Under the moonlight we danced"',
-      'Write a lyric theme: nature style: folk length: short',
-      'Create a sad song theme: separation style: classical length: long seed: "Memories fade like autumn leaves"'
+      'Generate a song emotion: calm seed: "Under the moonlight we danced"',
+      'Write a lyric emotion: happy seed: "Your smile outshines the morning sun"',
+      'Create a sad song emotion: sad seed: "Memories fade like autumn leaves"'
     ],
     'metaphor-creator': [
       'Create a metaphor source: love target: ocean emotion: positive',
@@ -82,15 +82,15 @@ export default function ChatPage() {
         setInput(`Create a metaphor source: ${metaphorSource} target: ${metaphorTarget} emotion: ${metaphorEmotion}`);
       }
     } else if (selectedModel === 'lyric-generator') {
-      if (lyricTheme) {
-        let inputText = `Generate a song theme: ${lyricTheme} style: ${lyricStyle} length: ${lyricLength}`;
+      if (lyricSeed) {
+        let inputText = `Generate a song emotion: ${lyricEmotion}`;
         if (lyricSeed) {
           inputText += ` seed: "${lyricSeed}"`;
         }
         setInput(inputText);
       }
     }
-  }, [selectedModel, metaphorSource, metaphorTarget, metaphorEmotion, lyricTheme, lyricStyle, lyricLength, lyricSeed]);
+  }, [selectedModel, metaphorSource, metaphorTarget, metaphorEmotion, lyricEmotion, lyricSeed]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -145,6 +145,39 @@ export default function ChatPage() {
       // handleSendMessage();
     }
   };
+
+  // Update lyric generator UI to include mood selection and handle list responses
+  const motions = [
+    { value: 'அமைதி', label: 'Calm / அமைதி', icon: '🌊' },
+    { value: 'சந்தோஷம்', label: 'Happy / சந்தோஷம்', icon: '😊' },
+    { value: 'கவலை', label: 'Sad / கவலை', icon: '😢' },
+    { value: 'காதல்', label: 'Romantic / காதல்', icon: '💖' },
+    { value: 'உற்சாகம்', label: 'Energetic / உற்சாகம்', icon: '⚡' }
+  ];
+
+  // Render mood selection
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-gray-300 mb-2">Select Mood</label>
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+      {motions.map((motion) => (
+        <button
+          key={motion.value}
+          className={`${
+            lyricEmotion === motion.value
+              ? 'bg-blue-600 text-white border-blue-500'
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600'
+          } rounded-lg p-2 transition-all border text-xs`}
+          onClick={() => setLyricEmotion(motion.value)}
+        >
+          <div className="flex flex-col items-center">
+            <span className="text-lg mb-1">{motion.icon}</span>
+            <div className="font-medium">{motion.label.split(' / ')[0]}</div>
+            <div className="text-xs opacity-75">{motion.label.split(' / ')[1]}</div>
+          </div>
+        </button>
+      ))}
+    </div>
+  </div>;
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -264,38 +297,20 @@ export default function ChatPage() {
       } 
       else if (service === 'lyric-generator') {
         // Use values from the selection UI if available
-        let theme = lyricTheme;
-        let style = lyricStyle;
-        let length = lyricLength;
+        let emotion = lyricEmotion;
         let seed = lyricSeed;
         
-        // If no theme is selected, parse from the input
-        if (!theme) {
+        // If no emotion is selected, parse from the input
+        if (!emotion) {
           const inputText = input.toLowerCase();
           
-          // Extract style if specified with explicit marker
-          if (inputText.includes("style:")) {
-            const styleMatch = inputText.match(/style:\s*(\w+)/i);
-            if (styleMatch && styleMatch[1]) {
-              style = styleMatch[1].toLowerCase();
+          // Extract emotion if specified with explicit marker
+          if (inputText.includes("emotion:")) {
+            const emotionMatch = inputText.match(/emotion:\s*(\w+)/i);
+            if (emotionMatch && emotionMatch[1]) {
+              emotion = emotionMatch[1].toLowerCase();
             }
           } 
-          
-          // Extract length if specified with explicit marker
-          if (inputText.includes("length:")) {
-            const lengthMatch = inputText.match(/length:\s*(\w+)/i);
-            if (lengthMatch && lengthMatch[1]) {
-              length = lengthMatch[1].toLowerCase();
-            }
-          }
-          
-          // Extract theme if specified with explicit marker
-          if (inputText.includes("theme:")) {
-            const themeMatch = inputText.match(/theme:\s*([^,]+)/i);
-            if (themeMatch && themeMatch[1]) {
-              theme = themeMatch[1].trim();
-            }
-          }
           
           // Extract seed if specified with explicit marker
           if (inputText.includes("seed:")) {
@@ -310,53 +325,29 @@ export default function ChatPage() {
             }
           }
           
-          // If theme wasn't explicitly specified, try to extract it from the rest of the input
-          if (!theme) {
+          // If emotion wasn't explicitly specified, try to extract it from the rest of the input
+          if (!emotion) {
             // Clean the input text by removing all parameter specifications
             let cleanedText = input
-              .replace(/\bstyle:\s*\w+/i, "")
-              .replace(/\blength:\s*\w+/i, "")
-              .replace(/\btheme:\s*[^,]+/i, "")
+              .replace(/\bemotion:\s*\w+/i, "")
               .replace(/\bseed:\s*"[^"]+"/i, "")
               .replace(/\bseed:\s*[^,]+/i, "");
               
-            // Extract theme from common phrases
-            if (cleanedText.includes("about")) {
-              const aboutIndex = cleanedText.indexOf("about");
-              theme = cleanedText.substring(aboutIndex + 5).trim();
-            } else if (cleanedText.includes("song") || cleanedText.includes("lyric")) {
-              // Try to find what the song is about
-              const words = cleanedText.split(/\s+/);
-              const songIndex = words.findIndex(word => 
-                word === "song" || word === "lyric" || word === "lyrics" || word === "songs");
-              
-              if (songIndex !== -1 && songIndex + 2 < words.length && 
-                  (words[songIndex + 1] === "about" || words[songIndex + 1] === "on" || words[songIndex + 1] === "of")) {
-                theme = words.slice(songIndex + 2).join(" ");
-              } else {
-                // If no "about" found, use everything after "song"/"lyric"
-                if (songIndex !== -1 && songIndex + 1 < words.length) {
-                  theme = words.slice(songIndex + 1).join(" ");
-                }
-              }
+            // Extract emotion from common phrases
+            if (cleanedText.includes("with") || cleanedText.includes("about")) {
+              const withIndex = cleanedText.indexOf("with") !== -1 ? cleanedText.indexOf("with") : cleanedText.indexOf("about");
+              emotion = cleanedText.substring(withIndex + 5).trim();
             } else {
-              // Use the entire cleaned input if nothing else works
-              theme = cleanedText.trim();
+              // Use a default emotion if none is found
+              emotion = "neutral";
             }
-          }
-          
-          // If still no theme, use a generic one
-          if (!theme) {
-            theme = "music";
           }
         }
         
         // Lyric Generator POST request with proper parameters
-        console.log(`Sending lyric request - Theme: ${theme}, Style: ${style}, Length: ${length}, Seed: ${seed}`);
+        console.log(`Sending lyric request - Emotion: ${emotion}, Seed: ${seed}`);
         const response = await axios.post(API_ENDPOINTS['lyric-generator'], {
-          theme: theme,
-          style: style,
-          length: length,
+          motion: emotion,
           seed: seed
         }, {
           headers: {
@@ -366,15 +357,25 @@ export default function ChatPage() {
         
         // Process lyric generator response
         if (response.data && response.data.lyrics) {
-          console.log(`Received lyrics response: ${response.data.lyrics.substring(0, 50)}...`);
+          // Handle both array and string responses
+          const lyricsArray = Array.isArray(response.data.lyrics) 
+            ? response.data.lyrics 
+            : [response.data.lyrics];
+          
+          console.log(`Received lyrics response: ${lyricsArray[0]?.substring(0, 50) || 'No lyrics'}...`);
           console.log(`Received ${response.data.suggestions ? response.data.suggestions.length : 0} lyric suggestions`);
           
-          let responseIntro = `**Generated Lyrics**\n\nHere's a ${style} lyric about "${theme}" (${length} length)`;
+          let responseIntro = `**Generated Tamil Lyrics**\n\n🎵 **Emotion:** ${emotion.charAt(0).toUpperCase() + emotion.slice(1)}`;
           if (seed) {
-            responseIntro += ` starting with: "${seed}"`;
+            responseIntro += `\n✨ **Seed:** "${seed}"`;
           }
           
-          responseContent = `${responseIntro}:\n\n${response.data.lyrics}\n\nThese lyrics express the emotions and themes you requested.`;
+          // Format each lyric line with proper spacing and numbering
+          const formattedLyrics = lyricsArray.map((lyric, index) => {
+            return `**${index + 1}.** ${lyric.trim()}`;
+          }).join('\n\n');
+          
+          responseContent = `${responseIntro}\n\n---\n\n${formattedLyrics}\n\n---\n\n💫 *These lyrics express the ${emotion} emotions you requested.*`;
           
           // Update the lyric suggestions if they're provided in the response
           if (response.data.suggestions && response.data.suggestions.length > 0) {
@@ -385,7 +386,7 @@ export default function ChatPage() {
           }
         } else {
           console.log("No lyrics in response, using fallback");
-          let responseIntro = `**Generated Lyrics**\n\nHere's a ${style} lyric about "${theme}"`;
+          let responseIntro = `**Generated Lyrics**\n\nHere's a lyric with ${emotion} emotion`;
           if (seed) {
             responseIntro += ` starting with: "${seed}"`;
           }
@@ -534,7 +535,13 @@ export default function ChatPage() {
       setIsLoading(false);
     }
   };
-
+const copyLyric = (text) => {
+  const decodedText = decodeURIComponent(text).replace(/\*\*(.*?)\*\*/g, '$1');
+  navigator.clipboard.writeText(decodedText);
+  
+  // You can add a toast notification here if needed
+  console.log('Copied lyric:', decodedText);
+};
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -544,6 +551,89 @@ export default function ChatPage() {
 
   // Function to render message content with Markdown-like formatting
   const formatMessage = (content) => {
+    // Handle lyric output with beautiful formatting
+    if (content.includes("**Generated Tamil Lyrics**")) {
+      const sections = content.split('---');
+      
+      if (sections.length >= 3) {
+        const headerSection = sections[0];
+        const lyricsSection = sections[1];
+        const footerSection = sections[2];
+        
+        // Format header with emotion and seed info
+        const formattedHeader = headerSection
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-400">$1</strong>')
+          .replace(/🎵/g, '<span class="text-2xl">🎵</span>')
+          .replace(/✨/g, '<span class="text-yellow-400">✨</span>');
+        
+        // Format lyrics with proper spacing and styling
+        const formattedLyrics = lyricsSection
+          .split('\n\n')
+          .filter(lyric => lyric.trim())
+          .map((lyric, index) => {
+            const cleanLyric = lyric.replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-300">$1</strong>');
+            return `
+              <div class="lyric-line bg-gray-700/30 rounded-lg p-4 mb-3 border-l-4 border-blue-400 hover:bg-gray-700/50 transition-all group">
+                <div class="flex items-start justify-between">
+                  <div class="flex-grow text-gray-100 leading-relaxed font-tamil text-lg">
+                    ${cleanLyric}
+                  </div>
+                  <button 
+                    class="ml-3 p-2 text-gray-400 hover:text-white bg-gray-600/50 hover:bg-gray-600 rounded-md opacity-0 group-hover:opacity-100 transition-all copy-lyric-btn" 
+                    onclick="copyLyric(event, '${encodeURIComponent(lyric.replace(/\*\*(.*?)\*\*/g, '$1'))}')"
+                    title="Copy this lyric"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        
+        // Format footer
+        const formattedFooter = footerSection
+          .replace(/💫/g, '<span class="text-purple-400 text-lg">💫</span>')
+          .replace(/\*(.*?)\*/g, '<em class="text-gray-300">$1</em>');
+        
+        const result = `
+          <div class="lyrics-container space-y-4">
+            <div class="lyrics-header text-center pb-4 border-b border-gray-600/50">
+              ${formattedHeader.replace(/\n/g, '<br>')}
+            </div>
+            
+            <div class="lyrics-content space-y-2 py-4">
+              ${formattedLyrics}
+            </div>
+            
+            <div class="lyrics-footer text-center pt-4 border-t border-gray-600/50">
+              ${formattedFooter.replace(/\n/g, '<br>')}
+            </div>
+            
+            <script>
+              function copyLyric(event, text) {
+                const decodedText = decodeURIComponent(text).replace(/\*\*(.*?)\*\*/g, '$1');
+                navigator.clipboard.writeText(decodedText);
+                
+                const btn = event.currentTarget;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<span class="text-xs text-green-400">✓</span>';
+                btn.classList.add('bg-green-600');
+                
+                setTimeout(() => {
+                  btn.innerHTML = originalHTML;
+                  btn.classList.remove('bg-green-600');
+                }, 2000);
+              }
+            </script>
+          </div>
+        `;
+        
+        return <div dangerouslySetInnerHTML={{ __html: result }} />;
+      }
+    }
+    
     // Handle metaphor output with copy buttons
     if (content.includes("**Created Metaphor**")) {
       // First, apply bold formatting
@@ -699,7 +789,36 @@ export default function ChatPage() {
   useEffect(() => {
     fetchLyricSuggestions();
   }, []);
+  // Add this useEffect after the existing useEffects
+useEffect(() => {
+  // Define global function for copy operations
+  window.copyLyric = (event, text) => {
+    const decodedText = decodeURIComponent(text).replace(/\*\*(.*?)\*\*/g, '$1');
+    navigator.clipboard.writeText(decodedText);
+    
+    const btn = event.currentTarget;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="text-xs text-green-400">✓</span>';
+    btn.classList.add('bg-green-600');
+    
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.classList.remove('bg-green-600');
+    }, 2000);
+  };
 
+  // Cleanup function to remove global function when component unmounts
+  return () => {
+    delete window.copyLyric;
+  };
+}, []);
+// const motions = [
+//   { value: 'அமைதி', label: 'Calm / அமைதி', color: 'bg-blue-600', icon: '🌊' },
+//   { value: 'சந்தோஷம்', label: 'Happy / சந்தோஷம்', color: 'bg-yellow-500', icon: '😊' },
+//   { value: 'கவலை', label: 'Sad / கவலை', color: 'bg-purple-600', icon: '😢' },
+//   { value: 'காதல்', label: 'Romantic / காதல்', color: 'bg-pink-500', icon: '💖' },
+//   { value: 'உற்சாகம்', label: 'Energetic / உற்சாகம்', color: 'bg-red-500', icon: '⚡' }
+// ];
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 to-black">
       {/* Header */}
@@ -868,7 +987,7 @@ export default function ChatPage() {
             {messages.map((message, idx) => (
               message.role === 'system' ? (
                 <div key={idx} className="flex justify-center items-center">
-                  <div className="max-w-xl mx-auto bg-gray-700/80 text-gray-100 shadow-lg rounded-2xl px-5 py-6 text-center">
+                  <div className="max-w-lg mx-auto bg-gray-700/80 text-gray-100 shadow-lg rounded-2xl px-5 py-6 text-center">
                     {formatMessage(message.content)}
                   </div>
                 </div>
@@ -890,7 +1009,7 @@ export default function ChatPage() {
                     </div>
                   )}
                   <div 
-                    className={`max-w-full rounded-2xl px-5 py-4 ${
+                    className={`max-w-2xl rounded-2xl px-5 py-4 ${
                       message.role === 'user' 
                         ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20' 
                         : message.role === 'system'
@@ -983,13 +1102,27 @@ export default function ChatPage() {
                       {batchResults
                         .slice((batchPage - 1) * batchPageSize, batchPage * batchPageSize)
                         .map((res, idx) => (
-                          <div key={idx + (batchPage-1)*batchPageSize} className={`rounded-lg px-4 py-2 flex items-center gap-3 ${res.isMetaphor ? 'bg-orange-500/10 border-l-4 border-orange-400' : 'bg-gray-700/50 border-l-4 border-gray-500'}`}>
-                            <span className={`font-bold ${res.isMetaphor ? 'text-orange-400' : 'text-gray-300'}`}>
-                              {res.isMetaphor ? 'Metaphor' : 'Literal'}
-                            </span>
-                            <span className="text-xs text-gray-400">({(res.confidence * 100).toFixed(1)}% confidence)</span>
-                            <span className="ml-3 text-white">{res.line}</span>
-                          </div>
+                          <div
+  key={idx + (batchPage - 1) * batchPageSize}
+  className={`rounded-lg px-4 py-2 flex items-center gap-3 ${
+    res.isMetaphor
+      ? 'bg-orange-500/10 border-l-4 border-orange-400'
+      : 'bg-gray-700/50 border-l-4 border-gray-500'
+  }`}
+>
+  <span className={`font-bold ${res.isMetaphor ? 'text-orange-400' : 'text-gray-300'}`}>
+    {res.isMetaphor ? 'Metaphor' : 'Literal'}
+  </span>
+  <span className="text-xs text-gray-400">
+    (
+    {res.isMetaphor
+      ? (res.confidence * 100).toFixed(1)
+      : (100 - res.confidence * 100).toFixed(1)}
+    % confidence)
+  </span>
+  <span className="ml-3 text-white">{res.line}</span>
+</div>
+
                         ))}
                     </div>
                   </div>
@@ -1102,66 +1235,83 @@ export default function ChatPage() {
           )}
           
           {showLyricOptions && (
-            <div className="bg-gray-800/80 backdrop-blur-sm p-4 border-t border-gray-700/30 animate-fade-in">
-              <div className="mb-2 text-center">
-                <h3 className="text-blue-400 font-medium">Lyric Generator Options</h3>
-                <p className="text-xs text-gray-400">Set your lyric parameters</p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Theme</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-gray-700/80 text-white rounded-lg border border-gray-600 px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., love, nature, sadness"
-                    value={lyricTheme}
-                    onChange={(e) => setLyricTheme(e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Style</label>
-                  <select
-                    className="w-full bg-gray-700/80 text-white rounded-lg border border-gray-600 px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                    value={lyricStyle}
-                    onChange={(e) => setLyricStyle(e.target.value)}
+    <div className="bg-gradient-to-br from-gray-800/90 via-gray-900/90 to-black/90 rounded-xl border border-gray-700/40 mx-4 mb-2">
+      {/* Toggle button */}
+      <button
+        onClick={() => setShowLyricOptionsPanel(!showLyricOptionsPanel)}
+        className="w-full flex items-center justify-between px-4 py-3 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+      >
+        <span className="flex items-center">
+          <span className="text-lg mr-2">✨</span>
+          <span className="font-medium">Generate Tamil Lyrics</span>
+        </span>
+        {showLyricOptionsPanel ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </button>
+
+      {/* Expandable panel */}
+      {showLyricOptionsPanel && (
+        <div className="p-4 border-t border-gray-700/40 animate-fade-in">
+          <div className="text-center mb-4">
+            <p className="text-sm text-gray-400">Select mood and add initial sentence</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Mood Selection */}
+            <div className="flex flex-col">
+              <label className="text-sm text-gray-300 mb-2">Select Mood</label>
+              <div className="grid grid-cols-2 gap-2">
+                {motions.map((motion) => (
+                  <button
+                    key={motion.value}
+                    className={`${
+                      lyricEmotion === motion.value
+                        ? 'bg-blue-600 text-white border-blue-500'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600'
+                    } rounded-lg p-2 transition-all border text-xs`}
+                    onClick={() => setLyricEmotion(motion.value)}
                   >
-                    <option value="pop">Pop</option>
-                    <option value="folk">Folk</option>
-                    <option value="classical">Classical</option>
-                    <option value="romantic">Romantic</option>
-                    <option value="rap">Rap</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Length</label>
-                  <select
-                    className="w-full bg-gray-700/80 text-white rounded-lg border border-gray-600 px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                    value={lyricLength}
-                    onChange={(e) => setLyricLength(e.target.value)}
-                  >
-                    <option value="short">Short</option>
-                    <option value="medium">Medium</option>
-                    <option value="long">Long</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Initial Sentence (Optional)</label>
-                <textarea 
-                  className="w-full bg-gray-700/80 text-white rounded-lg border border-gray-600 px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-transparent resize-none"
-                  placeholder="Enter an initial sentence or verse to start your lyrics..."
-                  rows="2"
-                  value={lyricSeed}
-                  onChange={(e) => setLyricSeed(e.target.value)}
-                />
-                <p className="text-xs text-gray-500 mt-1 italic">The generator will continue from this starting point</p>
+                    <div className="flex flex-col items-center">
+                      <span className="text-lg mb-1">{motion.icon}</span>
+                      <div className="font-medium">{motion.label.split(' / ')[0]}</div>
+                      <div className="text-xs opacity-75">{motion.label.split(' / ')[1]}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
-          )}
+
+            {/* Initial Sentence */}
+            <div className="flex flex-col">
+              <label className="text-sm text-gray-300 mb-2">Initial Sentence (Optional)</label>
+              <textarea
+                className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition text-sm"
+                placeholder="Enter an initial sentence..."
+                rows="4"
+                value={lyricSeed}
+                onChange={(e) => setLyricSeed(e.target.value)}
+              />
+              <p className="text-xs text-gray-500 mt-2 italic">Lyrics will continue from this point</p>
+            </div>
+          </div>
+
+          {/* Generate Button */}
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => {
+                const message = `Generate a song emotion: ${lyricEmotion}${lyricSeed ? ` seed: "${lyricSeed}"` : ''}`;
+                setInput(message);
+                setShowLyricOptionsPanel(false);
+              }}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all font-medium"
+            >
+              confirm
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )}
+
 
           {/* Input Area */}
           <div className="border-t border-gray-700/50 backdrop-blur-sm bg-gray-800/30 p-4 w-full">
