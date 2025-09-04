@@ -7,7 +7,7 @@ import uvicorn
 # Import model modules
 from models.metaphor_creator import generate_metaphor
 from models.metaphor_classifier import classify_metaphor
-from models.lyric_generator import generate_lyrics
+from models.lyric_generator import generate_lyrics_text
 
 app = FastAPI(title="Song Analysis API")
 
@@ -36,14 +36,7 @@ class PredictionResponse(BaseModel):
     is_metaphor: bool
     confidence: float
     
-class LyricsRequest(BaseModel):
-    theme: str
-    style: Optional[str] = "pop"
-    length: Optional[str] = "medium"  # Changed to str to accept "short", "medium", "long"
-    seed: Optional[str] = ""
-    
-class LyricsResponse(BaseModel):
-    lyrics: str
+
 
 # API Routes
 @app.post("/api/create-metaphors", response_model=MetaphorResponse)
@@ -61,10 +54,17 @@ async def create_metaphors(request: MetaphorRequest):
         metaphors = generate_metaphor(
             topic=request.source, 
             style=style, 
-            count=3,
+            count=5,  # Generate 5 metaphors instead of 3
             target=request.target
         )
-        return {"metaphors": metaphors}
+        
+        # Remove duplicates if any
+        unique_metaphors = []
+        for m in metaphors:
+            if m not in unique_metaphors:
+                unique_metaphors.append(m)
+        
+        return {"metaphors": unique_metaphors}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating metaphors: {str(e)}")
 
@@ -76,32 +76,34 @@ async def predict_metaphor(request: PredictionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error predicting metaphor: {str(e)}")
 
+class LyricsRequest(BaseModel):
+    motion: str
+    seed: Optional[str] = ""
+
+class LyricsResponse(BaseModel):
+    lyrics: List[str]
+    # suggestions: Optional[List[str]] = None
+
 @app.post("/api/generate-lyrics", response_model=LyricsResponse)
 async def create_lyrics(request: LyricsRequest):
     try:
-        # Map length strings to actual numbers
-        length_map = {
-            "short": 1,
-            "medium": 2,
-            "long": 3
-        }
-        
-        # Convert length string to int, or use default if not recognized
-        if isinstance(request.length, str):
-            verses = length_map.get(request.length.lower(), 2)  # Default to medium (2) if not recognized
-        else:
-            verses = 2  # Default to medium if not a string
-        print("reached")
-        lyrics = generate_lyrics(
-            theme=request.theme, 
-            style=request.style, 
-            length=verses,
-            seed=request.seed
-        )
-        return {"lyrics": lyrics}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating lyrics: {str(e)}")
+        print(f"Received lyric request: Motion={request.motion}, Seed={request.seed}")
 
+        # generate main lyric
+        main_lyric = generate_lyrics_text(motion=request.motion, seed=request.seed)
+
+        # generate 4 more lyrics (all considered as lyrics)
+        more_lyrics = [generate_lyrics_text(motion=request.motion, seed="") for _ in range(4)]
+
+        # combine all lyrics in a single list
+        all_lyrics = [main_lyric] + more_lyrics
+
+        print(f"Generated total {len(all_lyrics)} lyrics")
+        return {"lyrics": all_lyrics}
+
+    except Exception as e:
+        print(f"Error generating lyrics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating lyrics: {str(e)}")
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Song Analysis API"}

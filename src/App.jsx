@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import MetaphorClassifier from './pages/MetaphorClassifier';
 import LyricGenerator from './pages/LyricGenerator';
 import MetaphorCreator from './pages/MetaphorCreator';
+import ChatPage from './pages/ChatPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/metaphor-classifier" element={<MetaphorClassifier />} />
           <Route path="/lyric-generator" element={<LyricGenerator />} />
           <Route path="/metaphor-creator" element={<MetaphorCreator />} />
+          <Route path="/chat" element={<ChatPage />} />
         </Routes>
       </div>
     </Router>

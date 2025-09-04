@@ -37,6 +37,19 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col">
       
+      {/* Navbar */}
+      <nav className="fixed w-full z-50 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="text-white font-bold text-xl">Tamil AI</div>
+          <button 
+            onClick={() => navigate('/chat')}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-full font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all"
+          >
+            Open Chat
+          </button>
+        </div>
+      </nav>
+      
       {/* Hero Section */}
       <header className="pt-20 pb-12 px-6 text-center">
         <h1 className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
