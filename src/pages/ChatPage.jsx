@@ -831,135 +831,141 @@ useEffect(() => {
             Tamil AI Chat
           </span>
         </Link>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <select 
-              className="appearance-none bg-gray-800 text-white text-sm rounded-lg pl-4 pr-10 py-2.5 border border-gray-600 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-            >
-              <option value="auto">Auto-detect Service</option>
-              <option value="metaphor-classifier">🎭 Metaphor Classifier</option>
-              <option value="lyric-generator">🎵 Lyric Generator</option>
-              <option value="metaphor-creator">✨ Metaphor Creator</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
-          <button className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-gray-300 hover:text-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
-          </button>
-        </div>
+        <div className="flex w-full mt-6">
+  <div className="flex items-center space-x-4 ml-auto">
+    <div className="relative w-60">
+      <select 
+        className="appearance-none w-full bg-gray-800 text-white text-sm rounded-lg pl-4 pr-10 py-2.5 border border-gray-600 shadow-sm hover:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+        value={selectedModel}
+        onChange={(e) => setSelectedModel(e.target.value)}
+      >
+        <option value="auto">Auto-detect Service</option>
+        <option value="metaphor-classifier">🎭 Metaphor Classifier</option>
+        <option value="lyric-generator">🎵 Lyric Generator</option>
+        <option value="metaphor-creator">✨ Metaphor Creator</option>
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    </div>
+
+    <button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 p-3 rounded-xl text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+      </svg>
+    </button>
+  </div>
+</div>
+
       </header>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div
-      className="hidden md:block w-[475px] bg-gradient-to-br from-gray-900/80 to-gray-800/60 backdrop-blur-xl border-r border-gray-800 p-5 rounded-r-3xl shadow-2xl transition-all duration-300 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-700 scrollbar-track-gray-900"
-      style={{ maxHeight: 'calc(100vh - 0.5rem)' }}
+  className="hidden md:block w-[480px] bg-gradient-to-br from-gray-900/90 to-gray-800/70 backdrop-blur-2xl border-r border-gray-800/40 p-6 rounded-r-3xl shadow-2xl transition-all duration-300 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-900"
+  style={{ maxHeight: 'calc(100vh - 1rem)' }}
+>
+  {/* New Chat Button */}
+  <div className="mb-8">
+    <button 
+      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-2xl flex items-center justify-center transition-all hover:shadow-lg hover:shadow-purple-500/40 font-semibold tracking-wide"
+      onClick={handleNewChat}
     >
-          <div className="mb-6">
-            <button 
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl flex items-center justify-center transition-all hover:shadow-lg hover:shadow-purple-500/30 font-semibold tracking-wide"
-              onClick={handleNewChat}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              New Chat
-            </button>
-          </div>
-          
-          <div className="mb-8">
-            <h3 className="text-gray-300 text-xs uppercase font-bold mb-3 flex items-center tracking-wide">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Recent Chats
-            </h3>
-            <div className="space-y-3">
-              <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-700/40 to-purple-900/30 text-white border-l-4 border-purple-500 shadow-md flex flex-col gap-1">
-                <div className="text-sm font-semibold truncate">Lyric Generation</div>
-                <div className="text-xs text-gray-300 flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  2 hours ago
-                </div>
-              </div>
-              <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-700/30 to-blue-900/20 text-gray-100 border-l-4 border-blue-400 shadow hover:shadow-lg hover:bg-blue-800/30 cursor-pointer transition-all">
-                <div className="text-sm font-semibold truncate">Metaphor Analysis</div>
-                <div className="text-xs text-gray-300 flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Yesterday
-                </div>
-              </div>
-              <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-pink-700/30 to-pink-900/20 text-gray-100 border-l-4 border-pink-400 shadow hover:shadow-lg hover:bg-pink-800/30 cursor-pointer transition-all">
-                <div className="text-sm font-semibold truncate">Creating Nature Metaphors</div>
-                <div className="text-xs text-gray-300 flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  3 days ago
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <h3 className="text-gray-300 text-xs uppercase font-bold mb-3 flex items-center tracking-wide">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              Example Prompts
-            </h3>
-            {Object.entries(examples).map(([service, promptList]) => (
-              <div key={service} className="mb-5">
-                <h4 className={`text-sm font-bold mb-2 flex items-center ${
-                  service === 'metaphor-classifier' 
-                    ? 'text-orange-400' 
-                    : service === 'lyric-generator'
-                      ? 'text-blue-400'
-                      : 'text-pink-400'
-                }`}>
-                  <span className="mr-1">
-                    {service === 'metaphor-classifier' && '🎭'}
-                    {service === 'lyric-generator' && '🎵'}
-                    {service === 'metaphor-creator' && '✨'}
-                  </span>
-                  {service.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </h4>
-                <div className="space-y-2">
-                  {promptList.map((prompt, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`px-3 py-2 rounded-xl text-xs text-gray-100 bg-gradient-to-r from-gray-700/60 to-gray-800/60 border border-gray-700 hover:border-purple-500 shadow hover:shadow-lg cursor-pointer transition-all ${
-                        service === 'metaphor-classifier' 
-                          ? 'hover:shadow-orange-500/20' 
-                          : service === 'lyric-generator'
-                            ? 'hover:shadow-blue-500/20'
-                            : 'hover:shadow-pink-500/20'
-                      }`}
-                      onClick={() => {
-                        setInput(prompt);
-                        setSelectedModel(service);
-                      }}
-                    >
-                      {prompt}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+      New Chat
+    </button>
+  </div>
+
+  {/* Recent Chats */}
+  <div className="mb-10">
+    <h3 className="text-gray-300 text-sm uppercase font-bold mb-4 flex items-center gap-2 tracking-wide">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      Recent Chats
+    </h3>
+    <div className="space-y-4">
+      <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-purple-700/40 to-purple-900/40 text-white border-l-4 border-purple-500 shadow-md flex flex-col gap-2">
+        <div className="text-sm font-semibold truncate">Lyric Generation</div>
+        <div className="text-xs text-gray-300 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          2 hours ago
         </div>
+      </div>
+
+      <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-blue-700/30 to-blue-900/30 text-gray-100 border-l-4 border-blue-400 shadow hover:shadow-lg hover:bg-blue-800/40 cursor-pointer transition-all">
+        <div className="text-sm font-semibold truncate">Metaphor Analysis</div>
+        <div className="text-xs text-gray-300 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Yesterday
+        </div>
+      </div>
+
+      <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-pink-700/30 to-pink-900/30 text-gray-100 border-l-4 border-pink-400 shadow hover:shadow-lg hover:bg-pink-800/40 cursor-pointer transition-all">
+        <div className="text-sm font-semibold truncate">Creating Nature Metaphors</div>
+        <div className="text-xs text-gray-300 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          3 days ago
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Example Prompts */}
+  <div>
+    <h3 className="text-gray-300 text-sm uppercase font-bold mb-4 flex items-center gap-2 tracking-wide">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+      </svg>
+      Example Prompts
+    </h3>
+
+    {Object.entries(examples).map(([service, promptList]) => (
+      <div key={service} className="mb-6">
+        <h4 className={`text-sm font-bold mb-3 flex items-center gap-1 ${
+          service === 'metaphor-classifier' ? 'text-orange-400' : 
+          service === 'lyric-generator' ? 'text-blue-400' : 'text-pink-400'
+        }`}>
+          <span>
+            {service === 'metaphor-classifier' && '🎭'}
+            {service === 'lyric-generator' && '🎵'}
+            {service === 'metaphor-creator' && '✨'}
+          </span>
+          {service.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+        </h4>
+        <div className="space-y-3">
+          {promptList.map((prompt, idx) => (
+            <div
+              key={idx}
+              className={`px-4 py-3 rounded-2xl text-xs text-gray-100 bg-gradient-to-r from-gray-700/70 to-gray-800/70 border border-gray-700 hover:border-purple-500 hover:shadow-lg cursor-pointer transition-all ${
+                service === 'metaphor-classifier' ? 'hover:shadow-orange-500/30' :
+                service === 'lyric-generator' ? 'hover:shadow-blue-500/30' :
+                'hover:shadow-pink-500/30'
+              }`}
+              onClick={() => {
+                setInput(prompt);
+                setSelectedModel(service);
+              }}
+            >
+              {prompt}
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden relative" style={{ width: '100%' }}>
@@ -987,9 +993,37 @@ useEffect(() => {
             {messages.map((message, idx) => (
               message.role === 'system' ? (
                 <div key={idx} className="flex justify-center items-center">
-                  <div className="max-w-lg mx-auto bg-gray-700/80 text-gray-100 shadow-lg rounded-2xl px-5 py-6 text-center">
-                    {formatMessage(message.content)}
-                  </div>
+                  <div className="flex flex-col items-center mt-12 space-y-8">
+  {/* Welcome Card */}
+  <div className="max-w-md w-full bg-gradient-to-r from-purple-700/40 via-pink-500/30 to-purple-600/30 text-white shadow-2xl rounded-3xl px-8 py-6 text-center border border-purple-400/30 backdrop-blur-md">
+    <div className="text-2xl font-semibold mb-2">🤖 Welcome!</div>
+    <div className="text-sm text-gray-100/90">
+      {formatMessage(message.content)}
+    </div>
+  </div>
+
+  {/* Services Cards */}
+  <div className="flex flex-col md:flex-row justify-center gap-6 w-full max-w-4xl">
+    {/* Lyric Generation */}
+    <div className="flex-1 bg-gradient-to-br from-blue-700/30 to-blue-900/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
+      <div className="text-xl font-bold mb-2">🎵 Lyric Generation</div>
+      <div className="text-sm text-gray-200">Generate creative lyrics instantly.</div>
+    </div>
+
+    {/* Metaphor Classifier */}
+    <div className="flex-1 bg-gradient-to-br from-orange-600/30 to-orange-800/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
+      <div className="text-xl font-bold mb-2">🎭 Metaphor Classifier</div>
+      <div className="text-sm text-gray-200">Detect metaphors in text easily.</div>
+    </div>
+
+    {/* Metaphor Creator */}
+    <div className="flex-1 bg-gradient-to-br from-pink-600/30 to-pink-800/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
+      <div className="text-xl font-bold mb-2">✨ Metaphor Creator</div>
+      <div className="text-sm text-gray-200">Create beautiful metaphors from ideas.</div>
+    </div>
+  </div>
+</div>
+
                 </div>
               ) : (
                 <div 
