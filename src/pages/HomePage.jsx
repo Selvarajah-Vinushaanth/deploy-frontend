@@ -98,7 +98,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="text-center py-8 text-gray-400 text-sm border-t border-gray-800 mt-12">
-        <p>Tamil AI Models &copy; 2025 | Created by Vinushaanth</p>
+        <p>Tamil AI Models &copy; 2025 | Created by Group-23</p>
       </footer>
     </div>
   );

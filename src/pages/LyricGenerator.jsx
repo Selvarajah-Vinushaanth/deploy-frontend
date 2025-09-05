@@ -785,7 +785,7 @@ const downloadGeneratedLyrics = () => {
             <span className="hidden md:inline">|</span>
             <div>Created by Group-23</div>
           </div>
-          <p className="mt-3 text-gray-500 text-xs">Powered by deep learning and natural language processing</p>
+          <p className="mt-3 text-gray-500 text-xs">Powered by natural language processing</p>
           
           <div className="mt-6 flex justify-center space-x-4">
             <button className="text-gray-500 hover:text-indigo-400 transition-colors">
