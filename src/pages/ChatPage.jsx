@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios'; // You'll need to install axios: npm install axios
 import { ChevronDown, ChevronUp } from "lucide-react";
+import axios from 'axios'; // You'll need to install axios: npm install axios
+// import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([
@@ -18,6 +19,8 @@ export default function ChatPage() {
   const [chartData, setChartData] = useState(null); // For chart summary
   const [batchPage, setBatchPage] = useState(1); // pagination for batch results
   const [showLyricOptionsPanel, setShowLyricOptionsPanel] = useState(false);
+  const [showMetaphorOptionsPanel, setShowMetaphorOptionsPanel] = useState(false);
+  
   const batchPageSize = 5;
   const messagesEndRef = useRef(null);
   
@@ -663,7 +666,7 @@ const copyLyric = (text) => {
               <button 
                 class="ml-2 p-1 text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity copy-btn" 
                 data-metaphor="${encodeURIComponent(m)}"
-                onclick="copyMetaphor(event, '${encodeURIComponent(m)}')"
+                onclick="window.copyMetaphor(event, '${encodeURIComponent(m)}')"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -681,25 +684,6 @@ const copyLyric = (text) => {
             ${metaphorsWithButtons}
             <br>
             ${conclusionPart.replace(/\n/g, '<br>')}
-            
-            <script>
-              function copyMetaphor(event, text) {
-                const decodedText = decodeURIComponent(text);
-                navigator.clipboard.writeText(decodedText);
-                
-                // Show "Copied!" tooltip
-                const btn = event.currentTarget;
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<span class="text-xs">Copied!</span>';
-                btn.classList.add('bg-green-600');
-                
-                // Reset after 2 seconds
-                setTimeout(() => {
-                  btn.innerHTML = originalHTML;
-                  btn.classList.remove('bg-green-600');
-                }, 2000);
-              }
-            </script>
           </div>
         `;
       }
@@ -807,9 +791,26 @@ useEffect(() => {
     }, 2000);
   };
 
-  // Cleanup function to remove global function when component unmounts
+  // Define global function for metaphor copy operations
+  window.copyMetaphor = (event, text) => {
+    const decodedText = decodeURIComponent(text);
+    navigator.clipboard.writeText(decodedText);
+    
+    const btn = event.currentTarget;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="text-xs text-green-400">✓</span>';
+    btn.classList.add('bg-green-600');
+    
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.classList.remove('bg-green-600');
+    }, 2000);
+  };
+
+  // Cleanup function to remove global functions when component unmounts
   return () => {
     delete window.copyLyric;
+    delete window.copyMetaphor;
   };
 }, []);
 // const motions = [
@@ -1223,48 +1224,81 @@ useEffect(() => {
 
           {/* Options Panels */}
           {showMetaphorOptions && (
-            <div className="bg-gray-800/80 backdrop-blur-sm p-4 border-t border-gray-700/30 animate-fade-in">
-              <div className="mb-2 text-center">
-                <h3 className="text-purple-400 font-medium">Metaphor Creator Options</h3>
-                <p className="text-xs text-gray-400">Set your metaphor parameters</p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Source Concept</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-gray-700/80 text-white rounded-lg border border-gray-600 px-3 py-2 focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="e.g., love, knowledge, time"
-                    value={metaphorSource}
-                    onChange={(e) => setMetaphorSource(e.target.value)}
-                  />
+            <div className="bg-gradient-to-br from-gray-800/90 via-gray-900/90 to-black/90 rounded-xl border border-gray-700/40 mx-4 mb-2">
+              {/* Toggle button */}
+              <button
+                onClick={() => setShowMetaphorOptionsPanel(!showMetaphorOptionsPanel)}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm text-pink-400 hover:text-pink-300 transition-colors"
+              >
+                <span className="flex items-center">
+                  <span className="text-lg mr-2">✨</span>
+                  <span className="font-medium">Create Metaphors</span>
+                </span>
+                {showMetaphorOptionsPanel ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </button>
+
+              {/* Expandable panel */}
+              {showMetaphorOptionsPanel && (
+                <div className="p-4 border-t border-gray-700/40 animate-fade-in">
+                  <div className="text-center mb-4">
+                    <p className="text-sm text-gray-400">Set your metaphor parameters</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex flex-col">
+                      <label className="text-sm text-gray-300 mb-2">Source Concept</label>
+                      <input 
+                        type="text" 
+                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
+                        placeholder="e.g., love, knowledge, time"
+                        value={metaphorSource}
+                        onChange={(e) => setMetaphorSource(e.target.value)}
+                      />
+                      <p className="text-xs text-gray-500 mt-1 italic">What you want to describe</p>
+                    </div>
+                    
+                    <div className="flex flex-col">
+                      <label className="text-sm text-gray-300 mb-2">Target Domain</label>
+                      <input 
+                        type="text" 
+                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
+                        placeholder="e.g., ocean, fire, journey"
+                        value={metaphorTarget}
+                        onChange={(e) => setMetaphorTarget(e.target.value)}
+                      />
+                      <p className="text-xs text-gray-500 mt-1 italic">Compare it to</p>
+                    </div>
+                    
+                    <div className="flex flex-col">
+                      <label className="text-sm text-gray-300 mb-2">Emotion</label>
+                      <select
+                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
+                        value={metaphorEmotion}
+                        onChange={(e) => setMetaphorEmotion(e.target.value)}
+                      >
+                        <option value="positive">✨ Positive</option>
+                        <option value="negative">🌧️ Negative</option>
+                        <option value="neutral">⚖️ Neutral</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1 italic">Emotional tone</p>
+                    </div>
+                  </div>
+
+                  {/* Generate Button */}
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => {
+                        const message = `Create a metaphor source: ${metaphorSource} target: ${metaphorTarget} emotion: ${metaphorEmotion}`;
+                        setInput(message);
+                        setShowMetaphorOptionsPanel(false);
+                      }}
+                      className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all font-medium"
+                    >
+                      Create Metaphor
+                    </button>
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Target Domain</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-gray-700/80 text-white rounded-lg border border-gray-600 px-3 py-2 focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="e.g., ocean, fire, journey"
-                    value={metaphorTarget}
-                    onChange={(e) => setMetaphorTarget(e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Emotion</label>
-                  <select
-                    className="w-full bg-gray-700/80 text-white rounded-lg border border-gray-600 px-3 py-2 focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                    value={metaphorEmotion}
-                    onChange={(e) => setMetaphorEmotion(e.target.value)}
-                  >
-                    <option value="positive">Positive</option>
-                    <option value="negative">Negative</option>
-                    <option value="neutral">Neutral</option>
-                  </select>
-                </div>
-              </div>
+              )}
             </div>
           )}
           
@@ -1338,7 +1372,7 @@ useEffect(() => {
               }}
               className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all font-medium"
             >
-              confirm
+              Create Verse/Lyric
             </button>
           </div>
         </div>
