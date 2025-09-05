@@ -54,7 +54,7 @@ async def create_metaphors(request: MetaphorRequest):
         metaphors = generate_metaphor(
             topic=request.source, 
             style=style, 
-            count=5,  # Generate 5 metaphors instead of 3
+            count=2,  # Generate 5 metaphors instead of 3
             target=request.target
         )
         

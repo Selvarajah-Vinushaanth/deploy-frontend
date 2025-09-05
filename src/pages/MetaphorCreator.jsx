@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { Pie, Bar } from "react-chartjs-2";
+import { Chart, ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import axios from "axios";
+Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default function MetaphorCreator() {
   const [source, setSource] = useState("");
@@ -75,6 +78,112 @@ export default function MetaphorCreator() {
       setFavorites([...favorites, m]);
     }
   };
+
+  // Add this new function to handle example clicks
+  const handleExampleClick = (source, target) => {
+    setSource(source);
+    setTarget(target);
+    // Optional: Scroll to the input fields for better UX
+    document.querySelector('input[placeholder*="source"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  // Chart Data Helpers
+  function getStyleChartData() {
+    const styleCounts = {};
+    history.forEach(h => {
+      styleCounts[h.style] = (styleCounts[h.style] || 0) + 1;
+    });
+    return {
+      labels: Object.keys(styleCounts),
+      datasets: [{
+        data: Object.values(styleCounts),
+        backgroundColor: ["#fbbf24", "#f59e42", "#f472b6", "#34d399", "#60a5fa"],
+      }],
+    };
+  }
+
+  function getSourceChartData() {
+    const sourceCounts = {};
+    history.forEach(h => {
+      sourceCounts[h.source] = (sourceCounts[h.source] || 0) + 1;
+    });
+    const sorted = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return {
+      labels: sorted.map(([k]) => k),
+      datasets: [{
+        label: "Sources",
+        data: sorted.map(([_, v]) => v),
+        backgroundColor: "#fbbf24",
+      }],
+    };
+  }
+
+  function getTargetChartData() {
+    const targetCounts = {};
+    history.forEach(h => {
+      targetCounts[h.target] = (targetCounts[h.target] || 0) + 1;
+    });
+    const sorted = Object.entries(targetCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return {
+      labels: sorted.map(([k]) => k),
+      datasets: [{
+        label: "Targets",
+        data: sorted.map(([_, v]) => v),
+        backgroundColor: "#f59e42",
+      }],
+    };
+  }
+
+  function getFavoritesChartData() {
+    // Count by style for favorites
+    const styleCounts = {};
+    favorites.forEach(f => {
+      const h = history.find(h => h.results.includes(f));
+      if (h) {
+        styleCounts[h.style] = (styleCounts[h.style] || 0) + 1;
+      }
+    });
+    return {
+      labels: Object.keys(styleCounts),
+      datasets: [{
+        data: Object.values(styleCounts),
+        backgroundColor: ["#fbbf24", "#f59e42", "#f472b6", "#34d399", "#60a5fa"],
+      }],
+    };
+  }
+
+  // Export/Share Helpers
+  function exportMetaphors(type) {
+    let content = "";
+    let filename = "metaphors." + type;
+    if (type === "txt") {
+      content = generatedMetaphors.join("\n");
+    } else if (type === "csv") {
+      content = "Metaphor\n" + generatedMetaphors.map(m => `"${m.replace(/"/g, '""')}"`).join("\n");
+    } else if (type === "json") {
+      content = JSON.stringify(generatedMetaphors, null, 2);
+    }
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function shareMetaphors() {
+    const text = generatedMetaphors.join("\n");
+    if (navigator.share) {
+      navigator.share({
+        title: "My Metaphors",
+        text,
+      });
+    } else {
+      copyToClipboard();
+      alert("Metaphors copied! Paste them to share on social media.");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-gray-100 relative">
@@ -284,6 +393,13 @@ export default function MetaphorCreator() {
                     </>
                   )}
                 </button>
+                {/* Export/Share Buttons */}
+                <div className="flex gap-2 ml-4">
+                  <button onClick={() => exportMetaphors('txt')} className="px-2 py-1 bg-gray-700 rounded text-xs hover:bg-amber-600">Export TXT</button>
+                  <button onClick={() => exportMetaphors('csv')} className="px-2 py-1 bg-gray-700 rounded text-xs hover:bg-amber-600">Export CSV</button>
+                  <button onClick={() => exportMetaphors('json')} className="px-2 py-1 bg-gray-700 rounded text-xs hover:bg-amber-600">Export JSON</button>
+                  {/* <button onClick={shareMetaphors} className="px-2 py-1 bg-gray-700 rounded text-xs hover:bg-amber-600">Share</button> */}
+                </div>
               </div>
               <div className="bg-gray-900/60 rounded-lg p-6 space-y-4">
                 {generatedMetaphors.map((m, i) => (
@@ -313,6 +429,30 @@ export default function MetaphorCreator() {
                   </motion.div>
                 ))}
               </div>
+              {/* Visualization Section */}
+              <div className="mt-8">
+                <h3 className="text-lg font-bold mb-2 text-amber-300">Metaphor Insights</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-gray-900/70 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold mb-2 text-yellow-300">Style Distribution</h4>
+                    <Pie data={getStyleChartData()} />
+                  </div>
+                  <div className="bg-gray-900/70 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold mb-2 text-yellow-300">Most Used Sources</h4>
+                    <Bar data={getSourceChartData()} />
+                  </div>
+                  <div className="bg-gray-900/70 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold mb-2 text-yellow-300">Most Used Targets</h4>
+                    <Bar data={getTargetChartData()} />
+                  </div>
+                </div>
+                {favorites.length > 0 && (
+                  <div className="mt-6 bg-gray-900/70 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold mb-2 text-yellow-300">Favorites Breakdown</h4>
+                    <Pie data={getFavoritesChartData()} />
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </div>
@@ -330,21 +470,47 @@ export default function MetaphorCreator() {
                 <span className="mr-2">🌟</span> Example Pairs
               </h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer">
-                  <div className="font-medium text-amber-400">Pearl</div>
-                  <div className="text-gray-400">Eye</div>
+                <div 
+                  className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer"
+                  onClick={() => handleExampleClick("முத்து", "கண்")}
+                >
+                  <div className="font-medium text-amber-400">முத்து</div>
+                  <div className="text-gray-400">கண்</div>
                 </div>
-                <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer">
-                  <div className="font-medium text-amber-400">Fire</div>
-                  <div className="text-gray-400">Passion</div>
+                <div 
+                  className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer"
+                  onClick={() => handleExampleClick("தீ", "ஆர்வம்")}
+                >
+                  <div className="font-medium text-amber-400">தீ</div>
+                  <div className="text-gray-400">ஆர்வம்</div>
                 </div>
-                <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer">
-                  <div className="font-medium text-amber-400">Moon</div>
-                  <div className="text-gray-400">Dream</div>
+                <div 
+                  className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer"
+                  onClick={() => handleExampleClick("சந்திரன்", "கனவு")}
+                >
+                  <div className="font-medium text-amber-400">சந்திரன்</div>
+                  <div className="text-gray-400">கனவு</div>
                 </div>
-                <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer">
-                  <div className="font-medium text-amber-400">Ocean</div>
-                  <div className="text-gray-400">Mind</div>
+                <div 
+                  className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer"
+                  onClick={() => handleExampleClick("மரம்", "மனம்")}
+                >
+                  <div className="font-medium text-amber-400">மரம்</div>
+                  <div className="text-gray-400">மனம்</div>
+                </div>
+                <div 
+                  className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer"
+                  onClick={() => handleExampleClick("நட்சத்திரம்", "ஒளி")}
+                >
+                  <div className="font-medium text-amber-400">நட்சத்திரம்</div>
+                  <div className="text-gray-400">ஒளி</div>
+                </div>
+                <div 
+                  className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-amber-500/50 transition-colors duration-200 cursor-pointer"
+                  onClick={() => handleExampleClick("கடல்", "நிழல்")}
+                >
+                  <div className="font-medium text-amber-400">கடல்</div>
+                  <div className="text-gray-400">நிழல்</div>
                 </div>
               </div>
             </div>
@@ -385,7 +551,12 @@ export default function MetaphorCreator() {
                       {history.map((h, i) => (
                         <li
                           key={i}
-                          className="p-3 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-gray-600 transition-all duration-200"
+                          className="p-3 bg-gray-800/50 rounded-lg border border-gray-700/30 hover:border-gray-600 transition-all duration-200 cursor-pointer"
+                          onClick={() => {
+                            setSource(h.source);
+                            setTarget(h.target);
+                            setStyle(h.style);
+                          }}
                         >
                           <div className="flex justify-between mb-1">
                             <span className="font-medium text-amber-400">
