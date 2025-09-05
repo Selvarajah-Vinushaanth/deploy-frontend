@@ -115,27 +115,27 @@ export default function LyricGenerator() {
   
 const lyricExamples = [
   {
-    mood: 'calm',
+    mood: 'அமைதி',
     text: 'காற்று மெதுவாக வீசுகிறது, மனம் அமைதியாக இருக்கிறது.',
     label: 'Calm Example'
   },
   {
-    mood: 'happy',
+    mood: 'சந்தோஷம்',
     text: 'இன்று என் மனதில் மகிழ்ச்சி பொங்குகிறது.',
     label: 'Happy Example'
   },
   {
-    mood: 'sad',
+    mood: 'கவலை',
     text: 'மழை பொழிகிறது, என் மனதில் கவலை.',
     label: 'Sad Example'
   },
   {
-    mood: 'romantic',
+    mood: 'காதல்',
     text: 'உன் கண்கள் என் கனவுகளின் வெளிச்சம்.',
     label: 'Romantic Example'
   },
   {
-    mood: 'energetic',
+    mood: 'உற்சாகம்',
     text: 'வானம் கதிர்கள் வீசும், உற்சாகம் நிரம்பும்.',
     label: 'Energetic Example'
   }
@@ -667,12 +667,14 @@ const downloadGeneratedLyrics = () => {
 
                     <Tooltip 
                       formatter={(value, name) => [`${value} generations`, name]}
-                      contentStyle={{ 
-                        backgroundColor: '#1F2937', 
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#F3F4F6'
-                      }}
+                      contentStyle={{
+  backgroundColor: '#ffffff',     // white card
+  border: '1px solid #E5E7EB',    // light gray border
+  borderRadius: '8px',
+  color: '#111827',                // dark text
+  boxShadow: '0 2px 6px rgba(0,0,0,0.1)' // subtle shadow for depth
+}}
+
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -688,9 +690,12 @@ const downloadGeneratedLyrics = () => {
                   
                   <div className="bg-gradient-to-r from-purple-600/20 to-purple-800/20 rounded-lg p-3 text-center border border-purple-500/30">
                     <div className="text-xl font-bold text-purple-400">
-                      {Object.entries(moodUsage).reduce((max, [mood, count]) => 
-                        count > moodUsage[max] ? mood : max, 'calm'
-                      )}
+{Object.entries(moodUsage).reduce(
+  (maxEntry, [mood, count]) =>
+    count > maxEntry[1] ? [mood, count] : maxEntry,
+  ['calm', 0]
+)[0]}
+
                     </div>
                     <div className="text-xs text-gray-300">Favorite</div>
                   </div>
