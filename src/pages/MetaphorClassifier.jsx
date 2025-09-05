@@ -7,6 +7,8 @@ import html2canvas from 'html2canvas';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
+import { FiCopy } from "react-icons/fi";
+import { AiOutlineCheck } from "react-icons/ai";
 
 export default function MetaphorClassifier() {
   const [inputText, setInputText] = useState('');
@@ -23,6 +25,7 @@ export default function MetaphorClassifier() {
   const [copyStatus, setCopyStatus] = useState(false); // for copy feedback
   const [recentSearches, setRecentSearches] = useState([]);
   const [feedback, setFeedback] = useState("");
+  const [copiedIndex, setCopiedIndex] = useState(null);
   const pdfRef = useRef();
   
   const pageSize = 5;
@@ -498,7 +501,12 @@ const pagedResults = useMemo(() => {
     setTimeout(() => setCopyStatus(false), 1500); // Reset copy status after 1.5 seconds
   }}
 >
-  {copyStatus ? '✅ Copied' : '📋 Copy All'}
+  {copyStatus ? (
+      <AiOutlineCheck className="text-green-400 text-lg" />
+    ) : (
+      <FiCopy className="text-gray-400 hover:text-amber-400 text-lg" />
+    )}
+    <span>{copyStatus ? "Copied All" : "Copy All "}</span>
 </button>
           </>
         )}
@@ -524,83 +532,81 @@ const pagedResults = useMemo(() => {
     <div className="grid md:grid-cols-2 gap-6">
       
       {pagedResults.map((result, index) => {
-        
+  const handleCopy = () => {
+    navigator.clipboard.writeText(result.text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 1500); // show tick for 1.5s
+  };
 
-        const handleCopy = () => {
-          navigator.clipboard.writeText(result.text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500); // show tick for 1.5s
-        };
+  return (
+    <div
+      key={index}
+      className={`border-l-4 p-4 rounded-xl shadow-md transition-transform duration-300 hover:scale-105 hover:shadow-lg 
+        ${result.label === 'Metaphor' 
+          ? 'border-amber-500 bg-gradient-to-r from-amber-900/30 to-gray-800/50' 
+          : 'border-gray-500 bg-gray-800/50'}`}
+    >
+      <div className="flex justify-between items-start mb-2">
+        <p className="font-tamil text-lg text-gray-100 leading-relaxed flex-1">{result.text}</p>
+        <button
+          onClick={handleCopy}
+          className="ml-3 text-gray-400 hover:text-amber-400 transition-colors flex items-center"
+          title="Copy sentence"
+        >
+          {copiedIndex === index ? (<AiOutlineCheck className="text-green-400 text-lg" />
+) : (
+  <FiCopy className="text-gray-400 hover:text-amber-400 text-lg" />)}
+        </button>
+      </div>
 
-        return (
-          <div
-            key={index}
-            className={`border-l-4 p-4 rounded-xl shadow-md transition-transform duration-300 hover:scale-105 hover:shadow-lg 
-              ${result.label === 'Metaphor' 
-                ? 'border-amber-500 bg-gradient-to-r from-amber-900/30 to-gray-800/50' 
-                : 'border-gray-500 bg-gray-800/50'}`
-            }
-          >
-            <div className="flex justify-between items-start mb-2">
-              <p className="font-tamil text-lg text-gray-100 leading-relaxed flex-1">{result.text}</p>
-              <button
-                onClick={handleCopy}
-                className="ml-3 text-gray-400 hover:text-amber-400 transition-colors flex items-center"
-                title="Copy sentence"
-              >
-                {copied ? '✅' : '📋'}
-              </button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <span className={`px-2 py-0.5 rounded font-medium text-xs ${result.label === 'Metaphor' ? 'bg-amber-900/50 text-amber-300' : 'bg-gray-600/50 text-gray-300'}`}>
+            {result.label}
+          </span>
+
+          <div className="flex items-center space-x-2">
+            <div className="w-24 h-3 bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-3 rounded-full ${
+                  result.label === 'Literal'
+                    ? (100 - result.confidence * 100) > 70
+                      ? 'bg-red-500'
+                      : (100 - result.confidence * 100) > 40
+                        ? 'bg-yellow-500'
+                        : 'bg-green-500'
+                    : result.confidence > 0.7
+                      ? 'bg-green-500'
+                      : result.confidence > 0.4
+                        ? 'bg-yellow-500'
+                        : 'bg-red-500'
+                }`}
+                style={{
+                  width: `${
+                    result.label === 'Literal'
+                      ? (100 - result.confidence * 100)
+                      : (result.confidence * 100)
+                  }%`
+                }}
+              ></div>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className={`px-2 py-0.5 rounded font-medium text-xs ${result.label === 'Metaphor' ? 'bg-amber-900/50 text-amber-300' : 'bg-gray-600/50 text-gray-300'}`}>
-                  {result.label}
-                </span>
-
-                <div className="flex items-center space-x-2">
-                  <div className="w-24 h-3 bg-gray-700 rounded-full overflow-hidden">
-  <div
-    className={`h-3 rounded-full ${
-      result.label === 'Literal'
-        ? (100 - result.confidence * 100) > 70
-          ? 'bg-red-500'
-          : (100 - result.confidence * 100) > 40
-            ? 'bg-yellow-500'
-            : 'bg-green-500'
-        : result.confidence > 0.7
-          ? 'bg-green-500'
-          : result.confidence > 0.4
-            ? 'bg-yellow-500'
-            : 'bg-red-500'
-    }`}
-    style={{
-      width: `${
-        result.label === 'Literal'
-          ? (100 - result.confidence * 100)
-          : (result.confidence * 100)
-      }%`
-    }}
-  ></div>
-</div>
-                  {/* <span className="text-sm text-gray-300">{(result.confidence * 100).toFixed(1)}%</span> */}
-                  <span className="text-sm text-gray-300">
-                      {result.label === 'Literal'
-                              ? (100 - (result.confidence * 100)).toFixed(1) + '%'
-                                : (result.confidence * 100).toFixed(1) + '%'}
-                    </span>
-                </div>
-              </div>
-
-              {/* {result.label === 'Metaphor' && (
-                // <span className="bg-amber-900/60 text-amber-200 text-xs px-2 py-1 rounded-full border border-amber-700/50">
-                //   உருவகம்
-                // </span>
-              )} */}
-            </div>
+            <span className="text-sm text-gray-300">
+              {result.label === 'Literal'
+                ? (100 - (result.confidence * 100)).toFixed(1) + '%'
+                : (result.confidence * 100).toFixed(1) + '%'}
+            </span>
           </div>
-        );
-      })}
+        </div>
+
+        {/* {result.label === 'Metaphor' && (
+          <span className="bg-amber-900/60 text-amber-200 text-xs px-2 py-1 rounded-full border border-amber-700/50">
+            உருவகம்
+          </span>
+        )} */}
+      </div>
+    </div>
+  );
+})}
     </div>
   </div>
 )}
@@ -625,11 +631,13 @@ const pagedResults = useMemo(() => {
         {sortedResults.slice((page-1)*pageSize, page*pageSize).map((result, idx) => {
           
 
-          const handleCopy = () => {
-            navigator.clipboard.writeText(result.text);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          };
+          const globalIndex = (page - 1) * pageSize + idx;
+
+const handleCopy = () => {
+  navigator.clipboard.writeText(result.text);
+  setCopiedIndex(globalIndex);
+  setTimeout(() => setCopiedIndex(null), 1500);
+};
 
           return (
             <tr key={idx} className={`${result.label === 'Metaphor' ? 'bg-amber-900/20 hover:bg-amber-900/30' : 'hover:bg-gray-800/50'} transition-colors`}>
@@ -637,7 +645,11 @@ const pagedResults = useMemo(() => {
               <td className="px-4 py-3 font-tamil text-gray-100 flex justify-between items-center">
                 <span>{result.text}</span>
                 <button onClick={handleCopy} className="ml-2 text-gray-400 hover:text-amber-400 transition-colors text-sm">
-                  {copied ? '✅' : '📋'}
+                  {copiedIndex === globalIndex? (
+    <AiOutlineCheck className="text-green-400 text-lg" />
+  ) : (
+    <FiCopy className="text-gray-400 hover:text-amber-400 text-lg" />
+  )}
                 </button>
               </td>
               <td className="px-4 py-3">
