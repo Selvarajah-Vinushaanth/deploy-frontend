@@ -10,7 +10,7 @@ export default function HomePage() {
       title: 'Metaphor Classifier',
       description: 'Analyze Tamil text to identify metaphorical expressions with AI',
       icon: '🎭',
-      color: 'from-orange-500 to-amber-600',
+      color: 'from-purple-500 to-pink-600',
       route: '/metaphor-classifier',
       features: ['Detect metaphors in text', 'Confidence scores', 'Visual analysis']
     },
@@ -19,7 +19,7 @@ export default function HomePage() {
       title: 'Lyric Generator',
       description: 'Generate beautiful Tamil lyrics based on themes and emotions',
       icon: '🎵',
-      color: 'from-blue-500 to-indigo-600',
+      color: 'from-indigo-700 to-purple-600',
       route: '/lyric-generator',
       features: ['Theme-based generation', 'Continue lyrics', 'Multiple variations']
     },
@@ -28,7 +28,7 @@ export default function HomePage() {
       title: 'Metaphor Creator',
       description: 'Create custom metaphors by combining source and target concepts',
       icon: '✨',
-      color: 'from-purple-500 to-pink-600',
+      color: 'from-amber-500 to-yellow-400',
       route: '/metaphor-creator',
       features: ['Custom creation', 'Source & target mapping', 'Multiple styles']
     }

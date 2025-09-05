@@ -280,11 +280,11 @@ const pagedResults = useMemo(() => {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100">
       {/* Header with subtle gradient and shadow */}
       <ToastContainer />
-      <header className="bg-gradient-to-r from-amber-900 to-amber-700 text-white p-6 shadow-lg">
+      <header className="bg-gradient-to-r from-purple-900 to-pink-800 text-white p-6 shadow-lg">
         <div className="max-w-full mx-auto px-6">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold tracking-tight">
-              Tamil Metaphor <span className="text-amber-300">Classifier</span>
+              Tamil Metaphor <span className="text-purple-300">Classifier</span>
             </h1>
             <Link to="/" className="bg-black/20 hover:bg-black/30 px-4 py-2 rounded-lg transition-colors border border-white/10 shadow-sm">
               Back to Home
@@ -304,23 +304,23 @@ const pagedResults = useMemo(() => {
           {/* Input Section with glassy effect */}
           <div className="lg:col-span-3">
 
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 mb-8 transition-all duration-300 hover:shadow-amber-900/20">
+            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 mb-8 transition-all duration-300 hover:shadow-purple-900/20">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-white flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
                     <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
                   </svg>
                   Enter Tamil Text
                 </h2>
                 {isLoading && (
-                  <span className="text-xs bg-amber-800/30 text-amber-300 px-2 py-1 rounded-full animate-pulse">
+                  <span className="text-xs bg-purple-800/30 text-purple-300 px-2 py-1 rounded-full animate-pulse">
                     Processing...
                   </span>
                 )}
               </div>
               <textarea
-                className="w-full border border-gray-600 bg-gray-700/70 text-white rounded-lg p-4 h-80 font-tamil focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all shadow-inner"
+                className="w-full border border-gray-600 bg-gray-700/70 text-white rounded-lg p-4 h-80 font-tamil focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-inner"
                 value={inputText}
                 onChange={handleInputChange}
                 placeholder="Enter Tamil text to analyze for metaphors..."
@@ -330,7 +330,7 @@ const pagedResults = useMemo(() => {
               </p>
               
               <button
-                className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white px-6 py-3 rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center font-medium"
+                className="bg-gradient-to-r from-purple-600 to-pink-700 hover:from-purple-500 hover:to-pink-600 text-white px-6 py-3 rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center font-medium"
                 onClick={handleAnalyzeClick}
                 disabled={isLoading}
               >
@@ -363,7 +363,7 @@ const pagedResults = useMemo(() => {
       <div className="flex flex-col space-y-1">
         <label className="text-sm text-gray-300 font-medium">Filter by Label</label>
         <select
-          className="bg-gray-800 border border-gray-600 text-white rounded-md px-3 py-1.5 shadow-inner focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          className="bg-gray-800 border border-gray-600 text-white rounded-md px-3 py-1.5 shadow-inner focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           value={filterLabel}
           onChange={e => setFilterLabel(e.target.value)}
         >
@@ -403,7 +403,7 @@ const pagedResults = useMemo(() => {
           placeholder="Search sentences..."
           value={searchKeyword}
           onChange={e => setSearchKeyword(e.target.value)}
-          className="bg-gray-800 border border-gray-600 text-white rounded-md px-3 py-1.5 shadow-inner w-40 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          className="bg-gray-800 border border-gray-600 text-white rounded-md px-3 py-1.5 shadow-inner w-40 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
         />
       </div>
 
@@ -412,13 +412,13 @@ const pagedResults = useMemo(() => {
         <label className="text-sm text-gray-300 font-medium">Sort By</label>
         <div className="flex bg-gray-800 rounded-md p-1 shadow-inner">
           <button
-            className={`px-3 py-1 rounded-md text-sm ${sortCol === 'confidence' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
+            className={`px-3 py-1 rounded-md text-sm ${sortCol === 'confidence' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
             onClick={() => { setSortCol('confidence'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); }}
           >
             Confidence
           </button>
           <button
-            className={`px-3 py-1 rounded-md text-sm ${sortCol === 'label' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
+            className={`px-3 py-1 rounded-md text-sm ${sortCol === 'label' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
             onClick={() => { setSortCol('label'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc'); }}
           >
             Label
@@ -431,13 +431,13 @@ const pagedResults = useMemo(() => {
         <label className="text-sm text-gray-300 font-medium">View Mode</label>
         <div className="flex bg-gray-800 rounded-md p-1 shadow-inner">
           <button
-            className={`px-3 py-1 rounded-md text-sm ${viewMode === 'card' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
+            className={`px-3 py-1 rounded-md text-sm ${viewMode === 'card' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
             onClick={() => setViewMode('card')}
           >
             Card
           </button>
           <button
-            className={`px-3 py-1 rounded-md text-sm ${viewMode === 'table' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
+            className={`px-3 py-1 rounded-md text-sm ${viewMode === 'table' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-300 hover:bg-gray-700'}`}
             onClick={() => setViewMode('table')}
           >
             Table
@@ -472,7 +472,7 @@ const pagedResults = useMemo(() => {
     {/* Filter Summary & Reset/Copy */}
     <div className="mt-4 pt-3 border-t border-gray-700 flex flex-wrap justify-between items-center gap-3">
       <div className="text-xs text-gray-400">
-        Showing <span className="font-medium text-amber-400">{pagedResults.length}</span> of <span className="font-medium text-white">{filteredResults.length}</span> sentences
+        Showing <span className="font-medium text-purple-400">{pagedResults.length}</span> of <span className="font-medium text-white">{filteredResults.length}</span> sentences
         {filteredResults.length < results.length && (<span> (filtered from {results.length} total)</span>)}
       </div>
 
@@ -480,7 +480,7 @@ const pagedResults = useMemo(() => {
         {filteredResults.length > 0 && (
           <>
             <button
-              className="text-xs bg-amber-700/50 hover:bg-amber-700/70 text-amber-200 px-2 py-1 rounded flex items-center transition-colors"
+              className="text-xs bg-purple-700/50 hover:bg-purple-700/70 text-purple-200 px-2 py-1 rounded flex items-center transition-colors"
               onClick={() => {
                 setFilterLabel('all');
                 setFilterConfidence([0, 1]);
@@ -504,7 +504,7 @@ const pagedResults = useMemo(() => {
   {copyStatus ? (
       <AiOutlineCheck className="text-green-400 text-lg" />
     ) : (
-      <FiCopy className="text-gray-400 hover:text-amber-400 text-lg" />
+      <FiCopy className="text-gray-400 hover:text-purple-400 text-lg" />
     )}
     <span>{copyStatus ? "Copied All" : "Copy All "}</span>
 </button>
@@ -518,13 +518,13 @@ const pagedResults = useMemo(() => {
 
             {/* Card View */}
 {viewMode === 'card' && Array.isArray(pagedResults) && pagedResults.length > 0 && (
-  <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-amber-900/40">
+  <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-purple-900/40">
     <div className="flex justify-between items-center mb-6">
-      <h2 className="text-2xl font-bold text-amber-400 flex items-center">
+      <h2 className="text-2xl font-bold text-purple-400 flex items-center">
         Analysis Results
       </h2>
       <div className="text-xs text-gray-400 flex space-x-2">
-        <span className="bg-amber-900/30 text-amber-300 px-2 py-0.5 rounded">{stats.metaphor_count} Metaphors</span>
+        <span className="bg-purple-900/30 text-purple-300 px-2 py-0.5 rounded">{stats.metaphor_count} Metaphors</span>
         <span className="bg-gray-700/50 text-gray-300 px-2 py-0.5 rounded">{stats.literal_count} Literal</span>
       </div>
     </div>
@@ -543,25 +543,25 @@ const pagedResults = useMemo(() => {
       key={index}
       className={`border-l-4 p-4 rounded-xl shadow-md transition-transform duration-300 hover:scale-105 hover:shadow-lg 
         ${result.label === 'Metaphor' 
-          ? 'border-amber-500 bg-gradient-to-r from-amber-900/30 to-gray-800/50' 
+          ? 'border-purple-500 bg-gradient-to-r from-purple-900/30 to-gray-800/50' 
           : 'border-gray-500 bg-gray-800/50'}`}
     >
       <div className="flex justify-between items-start mb-2">
         <p className="font-tamil text-lg text-gray-100 leading-relaxed flex-1">{result.text}</p>
         <button
           onClick={handleCopy}
-          className="ml-3 text-gray-400 hover:text-amber-400 transition-colors flex items-center"
+          className="ml-3 text-gray-400 hover:text-purple-400 transition-colors flex items-center"
           title="Copy sentence"
         >
           {copiedIndex === index ? (<AiOutlineCheck className="text-green-400 text-lg" />
 ) : (
-  <FiCopy className="text-gray-400 hover:text-amber-400 text-lg" />)}
+  <FiCopy className="text-gray-400 hover:text-purple-400 text-lg" />)}
         </button>
       </div>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <span className={`px-2 py-0.5 rounded font-medium text-xs ${result.label === 'Metaphor' ? 'bg-amber-900/50 text-amber-300' : 'bg-gray-600/50 text-gray-300'}`}>
+          <span className={`px-2 py-0.5 rounded font-medium text-xs ${result.label === 'Metaphor' ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-600/50 text-gray-300'}`}>
             {result.label}
           </span>
 
@@ -598,11 +598,6 @@ const pagedResults = useMemo(() => {
           </div>
         </div>
 
-        {/* {result.label === 'Metaphor' && (
-          <span className="bg-amber-900/60 text-amber-200 text-xs px-2 py-1 rounded-full border border-amber-700/50">
-            உருவகம்
-          </span>
-        )} */}
       </div>
     </div>
   );
@@ -613,8 +608,8 @@ const pagedResults = useMemo(() => {
 
 {/* Table View */}
 {viewMode === 'table' && Array.isArray(sortedResults) && sortedResults.length > 0 && (
-  <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl p-6 overflow-x-auto transition-all duration-300 hover:shadow-amber-900/40">
-    <h2 className="text-2xl font-bold mb-4 text-amber-400 flex items-center">
+  <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl p-6 overflow-x-auto transition-all duration-300 hover:shadow-purple-900/40">
+    <h2 className="text-2xl font-bold mb-4 text-purple-400 flex items-center">
       Tabular View
     </h2>
 
@@ -629,67 +624,63 @@ const pagedResults = useMemo(() => {
       </thead>
       <tbody className="divide-y divide-gray-700">
         {sortedResults.slice((page-1)*pageSize, page*pageSize).map((result, idx) => {
-          
-
           const globalIndex = (page - 1) * pageSize + idx;
 
-const handleCopy = () => {
-  navigator.clipboard.writeText(result.text);
-  setCopiedIndex(globalIndex);
-  setTimeout(() => setCopiedIndex(null), 1500);
-};
+          const handleCopy = () => {
+            navigator.clipboard.writeText(result.text);
+            setCopiedIndex(globalIndex);
+            setTimeout(() => setCopiedIndex(null), 1500);
+          };
 
           return (
-            <tr key={idx} className={`${result.label === 'Metaphor' ? 'bg-amber-900/20 hover:bg-amber-900/30' : 'hover:bg-gray-800/50'} transition-colors`}>
+            <tr key={idx} className={`${result.label === 'Metaphor' ? 'bg-purple-900/20 hover:bg-purple-900/30' : 'hover:bg-gray-800/50'} transition-colors`}>
               <td className="px-4 py-3 font-medium">{(page-1)*pageSize + idx + 1}</td>
               <td className="px-4 py-3 font-tamil text-gray-100 flex justify-between items-center">
                 <span>{result.text}</span>
-                <button onClick={handleCopy} className="ml-2 text-gray-400 hover:text-amber-400 transition-colors text-sm">
+                <button onClick={handleCopy} className="ml-2 text-gray-400 hover:text-purple-400 transition-colors text-sm">
                   {copiedIndex === globalIndex? (
-    <AiOutlineCheck className="text-green-400 text-lg" />
-  ) : (
-    <FiCopy className="text-gray-400 hover:text-amber-400 text-lg" />
-  )}
+                    <AiOutlineCheck className="text-green-400 text-lg" />
+                  ) : (
+                    <FiCopy className="text-gray-400 hover:text-purple-400 text-lg" />
+                  )}
                 </button>
               </td>
               <td className="px-4 py-3">
-                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${result.label === 'Metaphor' ? 'bg-amber-900/70 text-amber-200' : 'bg-gray-600 text-gray-300'}`}>
+                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${result.label === 'Metaphor' ? 'bg-purple-900/70 text-purple-200' : 'bg-gray-600 text-gray-300'}`}>
                   {result.label}
                 </span>
               </td>
               <td className="px-4 py-3">
                 <div className="flex items-center">
                   <div className="w-24 h-3 bg-gray-700 rounded-full overflow-hidden">
-  <div
-    className={`h-3 rounded-full ${
-      result.label === 'Literal'
-        ? (100 - result.confidence * 100) > 70
-          ? 'bg-red-500'
-          : (100 - result.confidence * 100) > 40
-            ? 'bg-yellow-500'
-            : 'bg-green-500'
-        : result.confidence > 0.7
-          ? 'bg-green-500'
-          : result.confidence > 0.4
-            ? 'bg-yellow-500'
-            : 'bg-red-500'
-    }`}
-    style={{
-      width: `${
-        result.label === 'Literal'
-          ? (100 - result.confidence * 100)
-          : (result.confidence * 100)
-      }%`
-    }}
-  ></div>
-</div>
-                  {/* <span className="text-gray-300">{(result.confidence * 100).toFixed(1)}%</span>
-                   */}
-                   <span className="text-sm text-gray-300">
-  {result.label === 'Literal'
-    ? (100 - (result.confidence * 100)).toFixed(1) + '%'
-    : (result.confidence * 100).toFixed(1) + '%'}
-</span>
+                    <div
+                      className={`h-3 rounded-full ${
+                        result.label === 'Literal'
+                          ? (100 - result.confidence * 100) > 70
+                            ? 'bg-red-500'
+                            : (100 - result.confidence * 100) > 40
+                              ? 'bg-yellow-500'
+                              : 'bg-green-500'
+                          : result.confidence > 0.7
+                            ? 'bg-green-500'
+                            : result.confidence > 0.4
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
+                      }`}
+                      style={{
+                        width: `${
+                          result.label === 'Literal'
+                            ? (100 - result.confidence * 100)
+                            : (result.confidence * 100)
+                        }%`
+                      }}
+                    ></div>
+                  </div>
+                  <span className="text-sm text-gray-300">
+                    {result.label === 'Literal'
+                      ? (100 - (result.confidence * 100)).toFixed(1) + '%'
+                      : (result.confidence * 100).toFixed(1) + '%'}
+                  </span>
                 </div>
               </td>
             </tr>
@@ -701,10 +692,10 @@ const handleCopy = () => {
 )}
             {/* Stats Section with enhanced styling */}
 {stats && (
-  <div className="bg-gray-900/80 backdrop-blur-lg border border-gray-700 rounded-2xl shadow-2xl p-8 transition-all duration-300 hover:shadow-amber-900/30 mt-8">
+  <div className="bg-gray-900/80 backdrop-blur-lg border border-gray-700 rounded-2xl shadow-2xl p-8 transition-all duration-300 hover:shadow-purple-900/30 mt-8">
     <h2 className="text-2xl font-bold mb-6 text-white flex items-center justify-between">
       <span className="flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
           <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
           <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
         </svg>
@@ -716,17 +707,17 @@ const handleCopy = () => {
     <div className="space-y-8">
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-amber-900/30 rounded-xl p-4 border border-amber-800/30 hover:scale-105 transition">
-          <div className="text-3xl font-bold text-amber-300">{stats.metaphor_count}</div>
-          <div className="text-xs text-amber-200/70">Metaphors</div>
+        <div className="bg-purple-900/30 rounded-xl p-4 border border-purple-800/30 hover:scale-105 transition">
+          <div className="text-3xl font-bold text-purple-300">{stats.metaphor_count}</div>
+          <div className="text-xs text-purple-200/70">Metaphors</div>
         </div>
         <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600/30 hover:scale-105 transition">
           <div className="text-3xl font-bold text-gray-300">{stats.literal_count}</div>
           <div className="text-xs text-gray-400">Literal</div>
         </div>
-        <div className="bg-indigo-900/30 rounded-xl p-4 border border-indigo-800/30 hover:scale-105 transition">
-          <div className="text-3xl font-bold text-indigo-300">{stats.total_sentences}</div>
-          <div className="text-xs text-indigo-200/70">Total Sentences</div>
+        <div className="bg-fuchsia-900/30 rounded-xl p-4 border border-fuchsia-800/30 hover:scale-105 transition">
+          <div className="text-3xl font-bold text-fuchsia-300">{stats.total_sentences}</div>
+          <div className="text-xs text-fuchsia-200/70">Total Sentences</div>
         </div>
         <div className="bg-green-900/30 rounded-xl p-4 border border-green-800/30 hover:scale-105 transition">
           <div className="text-3xl font-bold text-green-300">{(stats.average_confidence * 100).toFixed(1)}%</div>
@@ -752,7 +743,7 @@ const handleCopy = () => {
             ],
             theta: ['Metaphor', 'Literal', 'Total', 'Confidence'],
             fill: 'toself',
-            line: { color: '#f59e0b' }
+            line: { color: '#a855f7' } // Changed to purple color
           }
         ]}
         layout={{
@@ -760,7 +751,7 @@ const handleCopy = () => {
             radialaxis: { visible: true, range: [0, Math.max(stats.total_sentences, 100)] }
           },
           paper_bgcolor: 'rgba(0,0,0,0)',
-          font: { color: '#f59e0b' }
+          font: { color: '#a855f7' } // Changed to purple color
         }}
         config={{ displayModeBar: false }}
         style={{ width: '100%', height: '100%' }}
@@ -778,7 +769,7 @@ const handleCopy = () => {
             type: 'pie',
             values: [stats.metaphor_count, stats.literal_count],
             labels: ['Metaphor', 'Literal'],
-            marker: { colors: ['#f59e0b', '#6b7280'] },
+            marker: { colors: ['#a855f7', '#6b7280'] }, // Changed first color to purple
             hole: 0.4
           }
         ]}
@@ -796,289 +787,78 @@ const handleCopy = () => {
   </div>
 </div>
 
+      {/* Explanatory Analysis */}
+      {/* Explanatory Analysis Table */}
+      <div className="my-6">
+        <h3 className="text-2xl font-bold text-white mb-5 border-b border-gray-600 pb-2">explanatory analysis</h3>
 
-      {/* Confidence bar */}
-      {/* <div>
-        <h3 className="font-medium text-gray-300 mb-3">Confidence per Sentence</h3>
-        <div className="h-56">
-          <Plot
-            data={[
-              {
-                type: 'bar',
-                x: results.map((r, i) => `S${i + 1}`),
-                y: results.map(r => Math.round((r.confidence || 0) * 100)),
-                marker: { color: results.map(r => r.label === "Metaphor" ? '#f59e0b' : '#6b7280') }
-              }
-            ]}
-            layout={{
-              margin: { t: 20, r: 0, l: 40, b: 40 },
-              paper_bgcolor: 'rgba(0,0,0,0)',
-              plot_bgcolor: 'rgba(0,0,0,0)',
-              font: { color: '#e5e7eb' },
-              xaxis: { title: 'Sentence', tickangle: -45 },
-              yaxis: { title: 'Confidence (%)', range: [0, 100] }
-            }}
-            config={{ displayModeBar: false }}
-            style={{ width: '100%', height: '100%' }}
-          />
+        <div className="overflow-x-auto rounded-2xl shadow-lg bg-gray-900/80">
+          <table className="min-w-full text-left text-gray-200 text-sm">
+            <thead className="bg-gray-800/90">
+              <tr>
+                <th className="px-6 py-3">Metric</th>
+                <th className="px-6 py-3">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
+                <td className="px-6 py-4">Total Sentences</td>
+                <td className="px-6 py-4 font-semibold text-purple-400">{stats.total_sentences}</td>
+              </tr>
+              <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
+                <td className="px-6 py-4">Metaphors</td>
+                <td className="px-6 py-4 font-semibold text-fuchsia-400">{stats.metaphor_count}</td>
+              </tr>
+              <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
+                <td className="px-6 py-4">Literal Sentences</td>
+                <td className="px-6 py-4 font-semibold text-green-400">{stats.literal_count}</td>
+              </tr>
+              <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
+                <td className="px-6 py-4">Average Confidence</td>
+                <td className="px-6 py-4 font-semibold text-yellow-400">{(stats.average_confidence * 100).toFixed(1)}%</td>
+              </tr>
+              <tr className="hover:bg-gray-800/70 transition">
+                <td className="px-6 py-4">High Confidence Sentences (&gt;85%)</td>
+                <td className="px-6 py-4 font-semibold text-red-400">{stats.high_confidence_count}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="text-gray-400 text-xs mt-3 px-6 pb-4">
+            these stats complement the charts above, giving a quick overview of sentence distribution and confidence levels.
+          </p>
         </div>
-      </div> */}
+        
+      </div>
 
-      {/* NEW: Trend line */}
-      {/* <div>
-        <h3 className="font-medium text-gray-300 mb-3">Confidence Trend (Line Chart)</h3>
-        <div className="h-56">
-          <Plot
-            data={[
-              {
-                type: 'scatter',
-                mode: 'lines+markers',
-                x: results.map((r, i) => i + 1),
-                y: results.map(r => Math.round((r.confidence || 0) * 100)),
-                line: { color: '#10b981' }
-              }
-            ]}
-            layout={{
-              margin: { t: 20, r: 0, l: 40, b: 40 },
-              paper_bgcolor: 'rgba(0,0,0,0)',
-              plot_bgcolor: 'rgba(0,0,0,0)',
-              font: { color: '#e5e7eb' },
-              xaxis: { title: 'Sentence Index' },
-              yaxis: { title: 'Confidence (%)', range: [0, 100] }
-            }}
-            config={{ displayModeBar: false }}
-            style={{ width: '100%', height: '100%' }}
-          />
-        </div>
-      </div> */}
-
-      
-      
-
-     
-      {/* NEW: Radar chart for overall profile */}
-
-
-
-{/* <div>
-  <h3 className="font-medium text-gray-300 mb-3">Confidence Distribution by Label</h3>
-  <div className="h-56">
-    <Plot
-      data={[
-        {
-          type: 'box',
-          y: results.filter(r => r.label === 'Metaphor').map(r => Math.round((r.confidence || 0) * 100)),
-          name: 'Metaphor',
-          marker: { color: '#f59e0b' }
-        },
-        {
-          type: 'box',
-          y: results.filter(r => r.label === 'Literal').map(r => Math.round((r.confidence || 0) * 100)),
-          name: 'Literal',
-          marker: { color: '#6b7280' }
-        }
-      ]}
-      layout={{
-        margin: { t: 20, r: 0, l: 40, b: 40 },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: '#e5e7eb' },
-        yaxis: { title: 'Confidence (%)', range: [0, 100] }
-      }}
-      config={{ displayModeBar: false }}
-      style={{ width: '100%', height: '100%' }}
-    />
-  </div>
-</div> */}
-{/* <div>
-  <h3 className="font-medium text-gray-300 mb-3">Confidence vs Sentence Length</h3>
-  <div className="h-56">
-    <Plot
-      data={[
-        {
-          type: 'scatter',
-          mode: 'markers',
-          x: results.map(r => r.text.length), // Sentence length
-          y: results.map(r => Math.round((r.confidence || 0) * 100)), // Confidence
-          marker: { color: '#6366f1', size: 8 }
-        }
-      ]}
-      layout={{
-        margin: { t: 20, r: 0, l: 40, b: 40 },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: '#e5e7eb' },
-        xaxis: { title: 'Sentence Length' },
-        yaxis: { title: 'Confidence (%)', range: [0, 100] }
-      }}
-      config={{ displayModeBar: false }}
-      style={{ width: '100%', height: '100%' }}
-    />
-  </div>
-</div> */}
-{/* <div>
-  <h3 className="font-medium text-gray-300 mb-3">Label Distribution Over Confidence Ranges</h3>
-  <div className="h-56">
-    <Plot
-      data={[
-        {
-          type: 'bar',
-          x: ['0-20%', '20-40%', '40-60%', '60-80%', '80-100%'],
-          y: [
-            results.filter(r => r.label === 'Metaphor' && r.confidence <= 0.2).length,
-            results.filter(r => r.label === 'Metaphor' && r.confidence > 0.2 && r.confidence <= 0.4).length,
-            results.filter(r => r.label === 'Metaphor' && r.confidence > 0.4 && r.confidence <= 0.6).length,
-            results.filter(r => r.label === 'Metaphor' && r.confidence > 0.6 && r.confidence <= 0.8).length,
-            results.filter(r => r.label === 'Metaphor' && r.confidence > 0.8).length
-          ],
-          name: 'Metaphor',
-          marker: { color: '#f59e0b' }
-        },
-        {
-          type: 'bar',
-          x: ['0-20%', '20-40%', '40-60%', '60-80%', '80-100%'],
-          y: [
-            results.filter(r => r.label === 'Literal' && r.confidence <= 0.2).length,
-            results.filter(r => r.label === 'Literal' && r.confidence > 0.2 && r.confidence <= 0.4).length,
-            results.filter(r => r.label === 'Literal' && r.confidence > 0.4 && r.confidence <= 0.6).length,
-            results.filter(r => r.label === 'Literal' && r.confidence > 0.6 && r.confidence <= 0.8).length,
-            results.filter(r => r.label === 'Literal' && r.confidence > 0.8).length
-          ],
-          name: 'Literal',
-          marker: { color: '#6b7280' }
-        }
-      ]}
-      layout={{
-        barmode: 'stack',
-        margin: { t: 20, r: 0, l: 40, b: 40 },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: '#e5e7eb' },
-        xaxis: { title: 'Confidence Range' },
-        yaxis: { title: 'Count' }
-      }}
-      config={{ displayModeBar: false }}
-      style={{ width: '100%', height: '100%' }}
-    />
-  </div>
-</div>
-<div>
-  <h3 className="font-medium text-gray-300 mb-3">Sentence Count by Label</h3>
-  <div className="h-56">
-    <Plot
-      data={[
-        {
-          type: 'bar',
-          x: ['Metaphor', 'Literal'],
-          y: [stats.metaphor_count, stats.literal_count],
-          marker: { color: ['#f59e0b', '#6b7280'] }
-        }
-      ]}
-      layout={{
-        margin: { t: 20, r: 0, l: 40, b: 40 },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: '#e5e7eb' },
-        xaxis: { title: 'Label' },
-        yaxis: { title: 'Count' }
-      }}
-      config={{ displayModeBar: false }}
-      style={{ width: '100%', height: '100%' }}
-    />
-  </div>
-</div> */}
-
-{/* Explanatory Analysis */}
-{/* Explanatory Analysis Table */}
-<div className="my-6">
-  <h3 className="text-2xl font-bold text-white mb-5 border-b border-gray-600 pb-2">explanatory analysis</h3>
-
-  <div className="overflow-x-auto rounded-2xl shadow-lg bg-gray-900/80">
-    <table className="min-w-full text-left text-gray-200 text-sm">
-      <thead className="bg-gray-800/90">
-        <tr>
-          <th className="px-6 py-3">Metric</th>
-          <th className="px-6 py-3">Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
-          <td className="px-6 py-4">Total Sentences</td>
-          <td className="px-6 py-4 font-semibold text-indigo-400">{stats.total_sentences}</td>
-        </tr>
-        <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
-          <td className="px-6 py-4">Metaphors</td>
-          <td className="px-6 py-4 font-semibold text-purple-400">{stats.metaphor_count}</td>
-        </tr>
-        <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
-          <td className="px-6 py-4">Literal Sentences</td>
-          <td className="px-6 py-4 font-semibold text-green-400">{stats.literal_count}</td>
-        </tr>
-        <tr className="border-b border-gray-700 hover:bg-gray-800/70 transition">
-          <td className="px-6 py-4">Average Confidence</td>
-          <td className="px-6 py-4 font-semibold text-yellow-400">{(stats.average_confidence * 100).toFixed(1)}%</td>
-        </tr>
-        <tr className="hover:bg-gray-800/70 transition">
-          <td className="px-6 py-4">High Confidence Sentences (&gt;85%)</td>
-          <td className="px-6 py-4 font-semibold text-red-400">{stats.high_confidence_count}</td>
-        </tr>
-      </tbody>
-    </table>
-    <p className="text-gray-400 text-xs mt-3 px-6 pb-4">
-      these stats complement the charts above, giving a quick overview of sentence distribution and confidence levels.
-    </p>
-  </div>
-  
-</div>
-
-
-
-
-
-
-{/* NEW: Export Data */}
-<div className="flex justify-end mt-4">
-  <button
-    onClick={() => {
-      const csv = results
-        .map((r, i) => `S${i + 1},${r.label},${(r.confidence * 100).toFixed(1)}`)
-        .join('\n')
-      const blob = new Blob([`Sentence,Label,Confidence\n${csv}`], { type: "text/csv" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = "analysis.csv"
-      link.click()
-    }}
-    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-500"
-  >
-    Export CSV
-  </button>
-</div>
-<div className="flex justify-end mt-4">
-  {/* <button
-    // onClick={handleExportPDF}
-    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
-  >
-    Export PDF
-  </button> */}
-</div>
-
+      {/* NEW: Export Data */}
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={() => {
+            const csv = results
+              .map((r, i) => `S${i + 1},${r.label},${(r.confidence * 100).toFixed(1)}`)
+              .join('\n')
+            const blob = new Blob([`Sentence,Label,Confidence\n${csv}`], { type: "text/csv" })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.download = "analysis.csv"
+            link.click()
+          }}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500"
+        >
+          Export CSV
+        </button>
+      </div>
     </div>
   </div>
 )}
-
-
-          
-        {/* Sidebar with enhanced styling */}
-          
           
         </div>
         <div className="lg:col-span-1 space-y-8">
             {/* Examples Section */}
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-purple-900/20">
               <h2 className="text-xl font-bold mb-4 text-white flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 002-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
                 </svg>
                 Examples
@@ -1087,13 +867,13 @@ const handleCopy = () => {
                 {examples.map((example, index) => (
                   <div 
                     key={index}
-                    className="border border-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-700/70 transition-all hover:shadow-md hover:border-amber-800/50"
+                    className="border border-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-700/70 transition-all hover:shadow-md hover:border-purple-800/50"
                     onClick={() => handleExampleClick(example)}
                   >
                     <p className="font-tamil text-white">{example.text}</p>
                     <div className="flex justify-between items-center mt-2 text-sm">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        example.label.includes('Metaphor') ? 'bg-amber-900/70 text-amber-200' : 'bg-gray-600 text-gray-300'
+                        example.label.includes('Metaphor') ? 'bg-purple-900/70 text-purple-200' : 'bg-gray-600 text-gray-300'
                       }`}>
                         {example.label}
                       </span>
@@ -1103,9 +883,9 @@ const handleCopy = () => {
                 ))}
               </div>
             </div>
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-purple-900/20">
   <h2 className="text-xl font-bold mb-4 text-white flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
       <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
       <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
     </svg>
@@ -1113,8 +893,8 @@ const handleCopy = () => {
   </h2>
   {stats ? (
     <ul className="space-y-2 text-gray-300 text-sm">
-      <li>Total Sentences: <span className="font-bold text-indigo-400">{stats.total_sentences}</span></li>
-      <li>Metaphors: <span className="font-bold text-purple-400">{stats.metaphor_count}</span></li>
+      <li>Total Sentences: <span className="font-bold text-purple-400">{stats.total_sentences}</span></li>
+      <li>Metaphors: <span className="font-bold text-fuchsia-400">{stats.metaphor_count}</span></li>
       <li>Literals: <span className="font-bold text-green-400">{stats.literal_count}</span></li>
       <li>Avg. Confidence: <span className="font-bold text-yellow-400">{(stats.average_confidence * 100).toFixed(1)}%</span></li>
     </ul>
@@ -1123,12 +903,9 @@ const handleCopy = () => {
   )}
 </div>
 
-
-
-
-<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-purple-900/20">
   <h2 className="text-xl font-bold mb-4 text-white flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
       <path d="M3 3a1 1 0 000 2h14a1 1 0 100-2H3zM3 7a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM2 11a2 2 0 002-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
     </svg>
     Recent Searches
@@ -1142,7 +919,7 @@ const handleCopy = () => {
             className="flex justify-between items-center bg-gray-700/50 hover:bg-gray-700/70 transition-colors rounded-md px-3 py-2"
           >
             <span
-              className="cursor-pointer hover:text-amber-400 transition"
+              className="cursor-pointer hover:text-purple-400 transition"
               onClick={() => setInputText(search)} // Populate input field on click
             >
               {search.length > 30 ? `${search.slice(0, 30)}...` : search}
@@ -1190,30 +967,30 @@ const handleCopy = () => {
     <p className="text-gray-400">No recent searches.</p>
   )}
 </div>
-<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-purple-900/20">
   <h2 className="text-xl font-bold mb-4 text-white flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
       <path d="M3 3a1 1 0 000 2h14a1 1 0 100-2H3zM3 7a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM2 11a2 2 0 002-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
     </svg>
     Search Analytics
   </h2>
   <ul className="space-y-2 text-gray-300 text-sm">
-    <li>Total Searches: <span className="font-bold text-indigo-400">{searchAnalytics.totalSearches}</span></li>
+    <li>Total Searches: <span className="font-bold text-purple-400">{searchAnalytics.totalSearches}</span></li>
     <li>Unique Searches: <span className="font-bold text-green-400">{searchAnalytics.uniqueSearches}</span></li>
     <li>Most Searched Phrases:</li>
     <ul className="ml-4 space-y-1">
       {searchAnalytics.mostSearched.map(([phrase, count], index) => (
         <li key={index} className="flex justify-between">
           <span>{phrase.length > 30 ? `${phrase.slice(0, 30)}...` : phrase}</span>
-          <span className="text-amber-400">{count} times</span>
+          <span className="text-purple-400">{count} times</span>
         </li>
       ))}
     </ul>
   </ul>
 </div>
-<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-purple-900/20">
   <h2 className="text-xl font-bold mb-4 text-white flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
       <path d="M13 7H7v6h6V7z" />
       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
     </svg>
@@ -1227,10 +1004,9 @@ const handleCopy = () => {
   </ul>
 </div>
 
-
-<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
+<div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-purple-900/20">
   <h2 className="text-xl font-bold mb-4 text-white flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
       <path d="M18 13a1 1 0 01-1 1H5.414l2.293 2.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 12H17a1 1 0 011 1z" />
     </svg>
     Feedback
@@ -1243,23 +1019,12 @@ const handleCopy = () => {
     onChange={(e) => setFeedback(e.target.value)}
   />
   <button
-    className="mt-3 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg"
+    className="mt-3 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg"
     onClick={() => submitFeedback(feedback)}
   >
     Submit Feedback
   </button>
 </div>
-
-
-{/* <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6 transition-all duration-300 hover:shadow-amber-900/20">
-  <h2 className="text-xl font-bold mb-4 text-white flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-      <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2H7v-2h2V7h2v2h2v2h-2v2z" />
-    </svg>
-    Fun Fact
-  </h2>
-  <p className="text-gray-300 italic">{funFacts[Math.floor(Math.random() * funFacts.length)]}</p>
-</div> */}
             
           </div>
       </div>
@@ -1270,7 +1035,7 @@ const handleCopy = () => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       {/* Logo and copyright */}
       <div className="flex flex-col space-y-4">
-        <h3 className="text-xl font-bold text-amber-400">Tamil Metaphor Classifier</h3>
+        <h3 className="text-xl font-bold text-purple-400">Tamil Metaphor Classifier</h3>
         <p className="text-sm text-gray-400">
           Identify metaphors in Tamil text using advanced NLP techniques.
         </p>
@@ -1284,11 +1049,11 @@ const handleCopy = () => {
       <div className="flex flex-col space-y-4">
         <h4 className="text-base font-medium text-white">Quick Links</h4>
         <nav className="flex flex-col space-y-2 text-sm">
-          <Link to="/" className="text-gray-400 hover:text-amber-400 transition-colors">Home</Link>
-          <Link to="/about" className="text-gray-400 hover:text-amber-400 transition-colors">About</Link>
-          <a href="https://github.com/username/repo" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-amber-400 transition-colors">GitHub Repository</a>
-          <a href="#" className="text-gray-400 hover:text-amber-400 transition-colors">Documentation</a>
-          <a href="#" className="text-gray-400 hover:text-amber-400 transition-colors">API Reference</a>
+          <Link to="/" className="text-gray-400 hover:text-purple-400 transition-colors">Home</Link>
+          <Link to="/about" className="text-gray-400 hover:text-purple-400 transition-colors">About</Link>
+          <a href="https://github.com/username/repo" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-purple-400 transition-colors">GitHub Repository</a>
+          <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Documentation</a>
+          <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">API Reference</a>
         </nav>
       </div>
 
@@ -1331,7 +1096,7 @@ const handleCopy = () => {
           {/* Scroll to top */}
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="bg-amber-600 text-white text-xs rounded px-2 py-1 flex items-center"
+            className="bg-purple-600 text-white text-xs rounded px-2 py-1 flex items-center"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />

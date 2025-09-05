@@ -835,16 +835,17 @@ useEffect(() => {
         <div className="flex w-full mt-6">
   <div className="flex items-center space-x-4 ml-auto">
     <div className="relative w-60">
-      <select 
-        className="appearance-none w-full bg-gray-800 text-white text-sm rounded-lg pl-4 pr-10 py-2.5 border border-gray-600 shadow-sm hover:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-        value={selectedModel}
-        onChange={(e) => setSelectedModel(e.target.value)}
-      >
-        <option value="auto">Auto-detect Service</option>
-        <option value="metaphor-classifier">🎭 Metaphor Classifier</option>
-        <option value="lyric-generator">🎵 Lyric Generator</option>
-        <option value="metaphor-creator">✨ Metaphor Creator</option>
-      </select>
+      <select
+  className="appearance-none w-full bg-gray-900 text-gray-200 text-sm rounded-xl pl-4 pr-10 py-3 border border-gray-700 shadow-md hover:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all duration-300"
+  value={selectedModel}
+  onChange={(e) => setSelectedModel(e.target.value)}
+>
+  <option value="auto">🌐 auto-detect service</option>
+  <option value="metaphor-classifier">🎭 metaphor classifier</option>
+  <option value="lyric-generator">🎵 lyric generator</option>
+  <option value="metaphor-creator">✨ metaphor creator</option>
+</select>
+
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -853,9 +854,9 @@ useEffect(() => {
     </div>
 
     <button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 p-3 rounded-xl text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-      </svg>
+      </svg> */}
     </button>
   </div>
 </div>
