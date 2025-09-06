@@ -9,6 +9,27 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Default user image URL
+  const defaultUserImage = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser?.displayName || currentUser?.email || 'User') + '&background=6366f1&color=fff&size=150';
+
+  // Get Google profile image or use default
+  const getProfileImageUrl = () => {
+    // First priority: Google profile photo from Firebase Auth
+    if (currentUser?.photoURL) {
+      return currentUser.photoURL;
+    }
+    
+    // Second priority: default generated avatar
+    return defaultUserImage;
+  };
+
+  function handleImageError(e) {
+    // If Google image fails, try default avatar
+    if (e.target.src !== defaultUserImage) {
+      e.target.src = defaultUserImage;
+    }
+  }
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -93,17 +114,12 @@ export default function Header() {
                     </span>
                   </div>
                   <div className="h-9 w-9 rounded-full overflow-hidden border-2 border-purple-500 flex-shrink-0 shadow-md">
-                    {currentUser.photoURL ? (
-                      <img
-                        className="h-full w-full object-cover"
-                        src={currentUser.photoURL}
-                        alt={currentUser.displayName || "User profile"}
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800 text-white font-medium">
-                        {currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'U'}
-                      </div>
-                    )}
+                    <img
+                      className="h-full w-full object-cover"
+                      src={getProfileImageUrl()}
+                      alt={currentUser.displayName || "User profile"}
+                      onError={handleImageError}
+                    />
                   </div>
                 </Link>
                 

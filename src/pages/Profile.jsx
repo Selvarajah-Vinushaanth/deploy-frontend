@@ -9,10 +9,36 @@ export default function Profile() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
-  const [photoURL, setPhotoURL] = useState(currentUser?.photoURL || '');
+  const [photoURL, setPhotoURL] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+
+  // Default user image URL
+  const defaultUserImage = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUser?.displayName || currentUser?.email || 'User') + '&background=6366f1&color=fff&size=150';
+
+  // Get Google profile image or use current photoURL
+  const getProfileImageUrl = () => {
+    // First priority: uploaded/custom photoURL
+    if (photoURL && !photoURL.includes('ui-avatars.com')) {
+      return photoURL;
+    }
+    
+    // Second priority: Google profile photo from Firebase Auth
+    if (currentUser?.photoURL) {
+      return currentUser.photoURL;
+    }
+    
+    // Third priority: default generated avatar
+    return defaultUserImage;
+  };
+
+  // Initialize photoURL with Google profile image if available
+  React.useEffect(() => {
+    if (currentUser?.photoURL) {
+      setPhotoURL(currentUser.photoURL);
+    }
+  }, [currentUser?.photoURL]);
 
   async function handleLogout() {
     setError('');
@@ -97,6 +123,13 @@ export default function Profile() {
     }
   }
 
+  function handleImageError(e) {
+    // If Google image fails, try default avatar
+    if (e.target.src !== defaultUserImage) {
+      e.target.src = defaultUserImage;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col">
       <Header />
@@ -145,9 +178,10 @@ export default function Profile() {
                       ) : (
                         <>
                           <img
-                            src={photoURL || 'https://via.placeholder.com/150?text=Profile'}
+                            src={getProfileImageUrl()}
                             alt="Profile"
                             className="h-full w-full object-cover"
+                            onError={handleImageError}
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-all duration-200">
                             <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity">
@@ -170,7 +204,9 @@ export default function Profile() {
                     <p className="text-sm text-center text-gray-400 mt-4">
                       Click to change profile picture
                     </p>
-                    <p className="text-white font-medium mt-4">{currentUser?.email}</p>
+                    <p className="text-white font-medium mt-4 text-center break-all text-sm px-2">
+                      {currentUser?.email}
+                    </p>
                     
                     <button
                       onClick={handleLogout}
