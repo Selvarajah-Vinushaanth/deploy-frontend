@@ -53,10 +53,16 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex flex-col relative overflow-hidden">
+      {/* Grid background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      {/* Decorative gradient circles */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-violet-600/20 to-purple-600/20 rounded-full blur-3xl animate-pulse opacity-70"></div>
+      <div className="absolute bottom-40 right-20 w-80 h-80 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "2s" }}></div>
+      <div className="absolute top-60 right-40 w-64 h-64 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "1s" }}></div>
       <Header />
-      <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl w-full space-y-10 bg-gray-800 p-12 rounded-xl shadow-2xl border border-gray-700">
+      <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 z-10">
+        <div className="max-w-2xl w-full space-y-10 bg-gray-800/40 backdrop-blur-md p-12 rounded-xl shadow-2xl border border-gray-700/50">
           <div>
             <h2 className="text-center text-4xl font-extrabold text-white">Create a new account</h2>
             <p className="mt-3 text-center text-base text-gray-400">

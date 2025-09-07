@@ -948,7 +948,7 @@ useEffect(() => {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div
-          className={`${sidebarCollapsed ? 'w-16' : 'w-[480px]'} hidden md:block bg-gradient-to-br from-gray-900/90 to-gray-800/70 backdrop-blur-2xl border-r border-gray-800/40 p-6 rounded-r-3xl shadow-2xl transition-all duration-300 overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-gray-900`}
+          className={`${sidebarCollapsed ? 'w-10' : 'w-[400px]'} hidden md:block bg-gradient-to-br from-gray-900/90 to-gray-800/70 backdrop-blur-2xl border-r border-gray-800/40 p-6 rounded-r-3xl shadow-2xl transition-all duration-300 overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-gray-900`}
           style={{ maxHeight: 'calc(100vh - 1rem)' }}
         >
           {/* Sidebar Toggle Button */}

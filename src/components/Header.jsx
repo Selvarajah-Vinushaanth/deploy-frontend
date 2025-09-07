@@ -71,7 +71,7 @@ export default function Header() {
           </div>
           
           <nav className="flex items-center space-x-6">
-            <Link 
+            {/* <Link 
               to="/" 
               className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                 isActive('/') 
@@ -80,11 +80,11 @@ export default function Header() {
               }`}
             >
               Home
-            </Link>
+            </Link> */}
             
             {currentUser ? (
               <>
-                <Link 
+                {/* <Link 
                   to="/chat" 
                   className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                     isActive('/chat') 
@@ -93,7 +93,7 @@ export default function Header() {
                   }`}
                 >
                   Chat
-                </Link>
+                </Link> */}
                 
                 <Link 
                   to="/profile" 
