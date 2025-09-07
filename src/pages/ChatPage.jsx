@@ -639,18 +639,18 @@ const copyLyric = (text) => {
         
         // Format header with emotion and seed info
         const formattedHeader = headerSection
-          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-400">$1</strong>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-green-400">$1</strong>')
           .replace(/🎵/g, '<span class="text-2xl">🎵</span>')
-          .replace(/✨/g, '<span class="text-yellow-400">✨</span>');
+          .replace(/✨/g, '<span class="text-green-400">✨</span>');
         
         // Format lyrics with proper spacing and styling
         const formattedLyrics = lyricsSection
           .split('\n\n')
           .filter(lyric => lyric.trim())
           .map((lyric, index) => {
-            const cleanLyric = lyric.replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-300">$1</strong>');
+            const cleanLyric = lyric.replace(/\*\*(.*?)\*\*/g, '<strong class="text-green-300">$1</strong>');
             return `
-              <div class="lyric-line bg-gray-700/30 rounded-lg p-4 mb-3 border-l-4 border-blue-400 hover:bg-gray-700/50 transition-all group">
+              <div class="lyric-line bg-gray-700/30 rounded-lg p-4 mb-3 border-l-4 border-green-400 hover:bg-gray-700/50 transition-all group">
                 <div class="flex items-start justify-between">
                   <div class="flex-grow text-gray-100 leading-relaxed font-tamil text-lg">
                     ${cleanLyric}
@@ -671,7 +671,7 @@ const copyLyric = (text) => {
         
         // Format footer
         const formattedFooter = footerSection
-          .replace(/💫/g, '<span class="text-purple-400 text-lg">💫</span>')
+          .replace(/💫/g, '<span class="text-green-400 text-lg">💫</span>')
           .replace(/\*(.*?)\*/g, '<em class="text-gray-300">$1</em>');
         
         const result = `
@@ -733,22 +733,23 @@ const copyLyric = (text) => {
         const metaphors = metaphorPart.split('\n\n').filter(m => m.trim() !== '');
         
         // Create HTML with copy buttons for each metaphor
-        const metaphorsWithButtons = metaphors.map((m, i) => {
-          return `
-            <div class="flex items-start my-2 group">
-              <div class="flex-grow metaphor-text">${m}</div>
-              <button 
-                class="ml-2 p-1 text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity copy-btn" 
-                data-metaphor="${encodeURIComponent(m)}"
-                onclick="window.copyMetaphor(event, '${encodeURIComponent(m)}')"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </button>
-            </div>
-          `;
-        }).join('');
+       const metaphorsWithButtons = metaphors.map((m, i) => {
+  return `
+    <div class="flex items-start my-2 group">
+      <div class="flex-grow metaphor-text">${m}</div>
+      <button 
+        class="ml-2 p-1 text-green-100 hover:text-white bg-green-700 hover:bg-green-600 rounded opacity-0 group-hover:opacity-100 transition-opacity copy-btn" 
+        data-metaphor="${encodeURIComponent(m)}"
+        onclick="window.copyMetaphor(event, '${encodeURIComponent(m)}')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      </button>
+    </div>
+  `;
+}
+).join('');
         
         // Put it all together
         result = `
@@ -1465,7 +1466,7 @@ useEffect(() => {
                         {/* Show all results button */}
                         {batchResults.length > batchPageSize && (
                           <div className="flex justify-center mt-4">
-                            <button
+                            {/* <button
                               onClick={() => setBatchPage(Math.ceil(batchResults.length / batchPageSize))}
                               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-2"
                             >
@@ -1473,7 +1474,7 @@ useEffect(() => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 3v18" />
                               </svg>
                               Show All Results
-                            </button>
+                            </button> */}
                           </div>
                         )}
                     </div>
@@ -1706,7 +1707,7 @@ useEffect(() => {
           <div className="border-t border-gray-700/50 backdrop-blur-sm bg-gray-800/30 p-4 w-full">
             <div className="w-full relative">
               <textarea
-                className={`w-full bg-gray-800/90 text-white rounded-2xl border border-gray-700 pl-5 pr-14 py-4 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none shadow-lg ${
+                className={`w-full bg-gray-800/90 text-white rounded-2xl border border-gray-700 pl-5 pr-14 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none shadow-lg ${
                   fontSize === 'small' ? 'text-sm' : fontSize === 'large' ? 'text-lg' : 'text-base'
                 }`}
                 rows="3"
