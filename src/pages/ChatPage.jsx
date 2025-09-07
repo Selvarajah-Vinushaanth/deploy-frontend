@@ -25,8 +25,17 @@ export default function ChatPage() {
   const [showExamplePrompts, setShowExamplePrompts] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
-  const batchPageSize = 5;
-  const messagesEndRef = useRef(null);
+  // New useful features states
+  const [showSettings, setShowSettings] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [fontSize, setFontSize] = useState('medium');
+  const [theme, setTheme] = useState('dark');
+  const [autoSave, setAutoSave] = useState(true);
+  const [showWordCount, setShowWordCount] = useState(false);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [favoritePrompts, setFavoritePrompts] = useState([]);
+  const [showFavorites, setShowFavorites] = useState(true);
   
   // New states for metaphor creator options
   const [showMetaphorOptions, setShowMetaphorOptions] = useState(false);
@@ -45,6 +54,9 @@ export default function ChatPage() {
     "Through stormy days and peaceful nights, our love remains unshaken.",
     "Every moment with you feels like an eternity of bliss."
   ]); // State for lyric suggestions
+  
+  const batchPageSize = 5;
+  const messagesEndRef = useRef(null);
   
   // API endpoints for each service
   const API_ENDPOINTS = {
@@ -98,6 +110,26 @@ export default function ChatPage() {
       }
     }
   }, [selectedModel, metaphorSource, metaphorTarget, metaphorEmotion, lyricEmotion, lyricSeed]);
+const exportChat = (type = 'txt') => {
+  const chatContent = document.querySelector("#chat-container")?.innerText;
+  if (!chatContent) return;
+
+  let mime = "text/plain";
+  let extension = "txt";
+
+  if (type === "json") {
+    mime = "application/json";
+    extension = "json";
+  }
+
+  const blob = new Blob([chatContent], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `chat.${extension}`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -542,6 +574,44 @@ export default function ChatPage() {
       setIsLoading(false);
     }
   };
+  const addToFavorites = (message) => {
+  if (!message.trim()) return; // ignore empty messages
+
+  // get existing favorites from localStorage (or start with empty array)
+  const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+  // add the new message if it’s not already in favorites
+  if (!favorites.includes(message)) {
+    favorites.push(message);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+    console.log("Added to favorites:", message);
+  } else {
+    console.log("Message already in favorites");
+  }
+};
+const getWordCount = () => {
+  const chatContent = document.querySelector("#chat-container")?.innerText || "";
+  return chatContent.split(/\s+/).filter(Boolean).length;
+};
+
+  const searchMessages = (query) => {
+  const messages = document.querySelectorAll(".message");
+  const results = [];
+
+  messages.forEach(msg => {
+    if (!query) {
+      msg.style.backgroundColor = "transparent";
+    } else if (msg.innerText.toLowerCase().includes(query.toLowerCase())) {
+      msg.style.backgroundColor = "yellow";
+      results.push(msg);
+    } else {
+      msg.style.backgroundColor = "transparent";
+    }
+  });
+
+  return results; // return all matched message elements
+};
+
 const copyLyric = (text) => {
   const decodedText = decodeURIComponent(text).replace(/\*\*(.*?)\*\*/g, '$1');
   navigator.clipboard.writeText(decodedText);
@@ -749,6 +819,14 @@ const copyLyric = (text) => {
       </svg>
     );
   };
+const copyConversation = () => {
+  const chatContent = document.querySelector("#chat-container")?.innerText;
+  if (!chatContent) return;
+
+  navigator.clipboard.writeText(chatContent)
+    .then(() => alert("Conversation copied!"))
+    .catch(() => alert("Failed to copy."));
+};
 
   const fetchLyricSuggestions = async () => {
     try {
@@ -829,10 +907,10 @@ useEffect(() => {
       {/* Header */}
       <header className="bg-gray-900/80 backdrop-blur-xl py-4 px-6 border-b border-gray-800 flex justify-between items-center sticky top-0 z-10 shadow-lg">
   <Link to="/" className="flex items-center space-x-3 group">
-    <div className="h-9 w-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+    <div className="h-9 w-9 bg-gradient-to-br from-green-500 to-teal-400 rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
       <span className="text-white font-bold">T</span>
     </div>
-    <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-300 group-hover:brightness-110 transition">
+    <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-teal-400 to-green-300 group-hover:brightness-110 transition">
       Tamil AI Chat
     </span>
   </Link>
@@ -840,7 +918,7 @@ useEffect(() => {
   <div className="flex items-center space-x-4 ml-auto">
     <div className="relative w-64">
       <select
-        className="appearance-none w-full bg-gray-800/90 text-gray-200 text-sm rounded-xl pl-4 pr-10 py-3 border border-gray-700 shadow-inner hover:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all duration-300"
+        className="appearance-none w-full bg-gray-800/90 text-gray-200 text-sm rounded-xl pl-4 pr-10 py-3 border border-gray-700 shadow-inner hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-600 transition-all duration-300"
         value={selectedModel}
         onChange={(e) => setSelectedModel(e.target.value)}
       >
@@ -857,7 +935,7 @@ useEffect(() => {
       </div>
     </div>
 
-    <button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 p-3 rounded-xl text-white shadow-md hover:shadow-xl transition-all flex items-center justify-center">
+    <button className="bg-gradient-to-r from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 p-3 rounded-xl text-white shadow-md hover:shadow-xl transition-all flex items-center justify-center">
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v.01M12 12v.01M12 18v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
       </svg>
@@ -869,14 +947,15 @@ useEffect(() => {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div
-          className={`${sidebarCollapsed ? 'w-16' : 'w-[480px]'} hidden md:block bg-gradient-to-br from-gray-900/90 to-gray-800/70 backdrop-blur-2xl border-r border-gray-800/40 p-6 rounded-r-3xl shadow-2xl transition-all duration-300 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-900`}
+          className={`${sidebarCollapsed ? 'w-16' : 'w-[480px]'} hidden md:block bg-gradient-to-br from-gray-900/90 to-gray-800/70 backdrop-blur-2xl border-r border-gray-800/40 p-6 rounded-r-3xl shadow-2xl transition-all duration-300 overflow-y-auto scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-gray-900`}
           style={{ maxHeight: 'calc(100vh - 1rem)' }}
         >
           {/* Sidebar Toggle Button */}
           <div className="mb-6 flex justify-between items-center">
             {!sidebarCollapsed && (
               <h2 className="text-lg font-bold text-white">Menu</h2>
-            )}
+              )
+            }
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white transition-all"
@@ -894,7 +973,7 @@ useEffect(() => {
               {/* New Chat Button */}
               <div className="mb-8">
                 <button 
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-2xl flex items-center justify-center transition-all hover:shadow-lg hover:shadow-purple-500/40 font-semibold tracking-wide"
+                  className="w-full bg-gradient-to-r from-green-500 to-teal-400 text-white py-4 rounded-2xl flex items-center justify-center transition-all hover:shadow-lg hover:shadow-green-500/40 font-semibold tracking-wide"
                   onClick={handleNewChat}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -904,118 +983,299 @@ useEffect(() => {
                 </button>
               </div>
 
-              {/* Recent Chats */}
-              <div className="mb-10">
-                <button
-                  onClick={() => setShowRecentChats(!showRecentChats)}
-                  className="w-full flex items-center justify-between text-gray-300 text-sm uppercase font-bold mb-4 tracking-wide hover:text-white transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              {/* Quick Actions */}
+              <div className="mb-8">
+                <h3 className="text-gray-300 text-sm uppercase font-bold mb-4 flex items-center gap-2 tracking-wide">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Quick Actions
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => exportChat('txt')}
+                    className="p-3 bg-gray-700/50 hover:bg-green-600/50 rounded-xl text-xs text-gray-300 hover:text-white transition-all flex flex-col items-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Recent Chats
-                  </div>
-                  {showRecentChats ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-
-                {showRecentChats && (
-                  <div className="space-y-4 animate-fade-in">
-                    <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-purple-700/40 to-purple-900/40 text-white border-l-4 border-purple-500 shadow-md flex flex-col gap-2">
-                      <div className="text-sm font-semibold truncate">Lyric Generation</div>
-                      <div className="text-xs text-gray-300 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        2 hours ago
-                      </div>
-                    </div>
-
-                    <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-blue-700/30 to-blue-900/30 text-gray-100 border-l-4 border-blue-400 shadow hover:shadow-lg hover:bg-blue-800/40 cursor-pointer transition-all">
-                      <div className="text-sm font-semibold truncate">Metaphor Analysis</div>
-                      <div className="text-xs text-gray-300 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Yesterday
-                      </div>
-                    </div>
-
-                    <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-pink-700/30 to-pink-900/30 text-gray-100 border-l-4 border-pink-400 shadow hover:shadow-lg hover:bg-pink-800/40 cursor-pointer transition-all">
-                      <div className="text-sm font-semibold truncate">Creating Nature Metaphors</div>
-                      <div className="text-xs text-gray-300 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        3 days ago
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Example Prompts */}
-              <div>
-                <button
-                  onClick={() => setShowExamplePrompts(!showExamplePrompts)}
-                  className="w-full flex items-center justify-between text-gray-300 text-sm uppercase font-bold mb-4 tracking-wide hover:text-white transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    Export Chat
+                  </button>
+                  
+                  <button
+                    onClick={copyConversation}
+                    className="p-3 bg-gray-700/50 hover:bg-green-600/50 rounded-xl text-xs text-gray-300 hover:text-white transition-all flex flex-col items-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    Example Prompts
+                    Copy All
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowSearch(!showSearch)}
+                    className="p-3 bg-gray-700/50 hover:bg-green-600/50 rounded-xl text-xs text-gray-300 hover:text-white transition-all flex flex-col items-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Search Chat
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className="p-3 bg-gray-700/50 hover:bg-green-600/50 rounded-xl text-xs text-gray-300 hover:text-white transition-all flex flex-col items-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Settings
+                      </button>
+                    </div>
                   </div>
-                  {showExamplePrompts ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
 
-                {showExamplePrompts && (
-                  <div className="animate-fade-in">
-                    {Object.entries(examples).map(([service, promptList]) => (
-                      <div key={service} className="mb-6">
-                        <h4 className={`text-sm font-bold mb-3 flex items-center gap-1 ${
-                          service === 'metaphor-classifier' ? 'text-orange-400' : 
-                          service === 'lyric-generator' ? 'text-blue-400' : 'text-pink-400'
-                        }`}>
-                          <span>
-                            {service === 'metaphor-classifier' && '🎭'}
-                            {service === 'lyric-generator' && '🎵'}
-                            {service === 'metaphor-creator' && '✨'}
-                          </span>
-                          {service.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </h4>
-                        <div className="space-y-3">
-                          {promptList.map((prompt, idx) => (
-                            <div
-                              key={idx}
-                              className={`px-4 py-3 rounded-2xl text-xs text-gray-100 bg-gradient-to-r from-gray-700/70 to-gray-800/70 border border-gray-700 hover:border-purple-500 hover:shadow-lg cursor-pointer transition-all ${
-                                service === 'metaphor-classifier' ? 'hover:shadow-orange-500/30' :
-                                service === 'lyric-generator' ? 'hover:shadow-blue-500/30' :
-                                'hover:shadow-pink-500/30'
-                              }`}
-                              onClick={() => {
-                                setInput(prompt);
-                                setSelectedModel(service);
-                              }}
-                            >
-                              {prompt}
-                            </div>
-                          ))}
+                  {/* Search Panel */}
+                  {showSearch && (
+                    <div className="mb-6 p-4 bg-gray-800/50 rounded-xl border border-gray-700/40">
+                      <h4 className="text-white font-medium mb-3">Search Messages</h4>
+                      <input
+                        type="text"
+                        placeholder="Search in conversation..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
+                      />
+                      {searchQuery && (
+                        <div className="mt-2 text-xs text-gray-400">
+                          Found {searchMessages(searchQuery).length} results
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Settings Panel */}
+                  {showSettings && (
+                    <div className="mb-6 p-4 bg-gray-800/50 rounded-xl border border-gray-700/40">
+                      <h4 className="text-white font-medium mb-3">Chat Settings</h4>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">Font Size</label>
+                          <select
+                            value={fontSize}
+                            onChange={(e) => setFontSize(e.target.value)}
+                            className="w-full bg-gray-800 text-white rounded px-2 py-1 text-xs"
+                          >
+                            <option value="small">Small</option>
+                            <option value="medium">Medium</option>
+                            <option value="large">Large</option>
+                          </select>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-400">Show Word Count</span>
+                          <button
+                            onClick={() => setShowWordCount(!showWordCount)}
+                            className={`w-8 h-4 rounded-full transition-colors ${
+                              showWordCount ? 'bg-green-500' : 'bg-gray-600'
+                            }`}
+                          >
+                            <div className={`w-3 h-3 bg-white rounded-full transition-transform ${
+                              showWordCount ? 'translate-x-4' : 'translate-x-0.5'
+                            }`} />
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-400">Auto-save Chats</span>
+                          <button
+                            onClick={() => setAutoSave(!autoSave)}
+                            className={`w-8 h-4 rounded-full transition-colors ${
+                              autoSave ? 'bg-green-500' : 'bg-gray-600'
+                            }`}
+                          >
+                            <div className={`w-3 h-3 bg-white rounded-full transition-transform ${
+                              autoSave ? 'translate-x-4' : 'translate-x-0.5'
+                            }`} />
+                          </button>
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  {/* Recent Chats */}
+                  <div className="mb-10">
+                    <button
+                      onClick={() => setShowRecentChats(!showRecentChats)}
+                      className="w-full flex items-center justify-between text-gray-300 text-sm uppercase font-bold mb-4 tracking-wide hover:text-white transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Recent Chats
+                      </div>
+                      {showRecentChats ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+
+                    {showRecentChats && (
+                      <div className="space-y-4 animate-fade-in">
+                        <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-green-700/40 to-green-900/40 text-white border-l-4 border-green-500 shadow-md flex flex-col gap-2">
+                          <div className="text-sm font-semibold">
+                            🌟 Your Recent Chats
+                          </div>
+                          <div className="text-xs text-gray-100/90">
+                            {/* Display recent chats from history */}
+                            {chatHistory.length > 0 ? (
+                              chatHistory.slice(0, 3).map((chat, idx) => (
+                                <div key={idx} className="flex flex-col">
+                                  <div className="font-medium">{chat.prompt}</div>
+                                  <div className="text-gray-300 text-xs">{new Date(chat.date).toLocaleString('en-IN')}</div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-gray-400 text-center text-xs italic py-2">
+                                No recent chats found. Start a new conversation!
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-teal-700/30 to-teal-900/30 text-gray-100 border-l-4 border-teal-400 shadow hover:shadow-lg hover:bg-teal-800/40 cursor-pointer transition-all">
+                          <div className="text-sm font-semibold">
+                            📚 Explore Example Prompts
+                          </div>
+                          <div className="text-xs text-gray-300">
+                            Click to insert an example prompt and see the magic!
+                          </div>
+                        </div>
+
+                        <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-green-700/30 to-green-900/30 text-gray-100 border-l-4 border-green-400 shadow hover:shadow-lg hover:bg-green-800/40 cursor-pointer transition-all">
+                          <div className="text-sm font-semibold">
+                            ✨ Create Your Own Metaphor
+                          </div>
+                          <div className="text-xs text-gray-300">
+                            Use the metaphor creator to craft beautiful metaphors.
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </>
-          )}
+
+                  {/* Example Prompts */}
+                  <div>
+                    <button
+                      onClick={() => setShowExamplePrompts(!showExamplePrompts)}
+                      className="w-full flex items-center justify-between text-gray-300 text-sm uppercase font-bold mb-4 tracking-wide hover:text-white transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Example Prompts
+                      </div>
+                      {showExamplePrompts ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+
+                    {showExamplePrompts && (
+                      <div className="animate-fade-in">
+                        {Object.entries(examples).map(([service, promptList]) => (
+                          <div key={service} className="mb-6">
+                            <h4 className={`text-sm font-bold mb-3 flex items-center gap-1 ${
+                              service === 'metaphor-classifier' ? 'text-green-400' : 
+                              service === 'lyric-generator' ? 'text-teal-400' : 'text-emerald-400'
+                            }`}>
+                              <span className="text-lg">
+                                {service === 'metaphor-classifier' && '🎭'}
+                                {service === 'lyric-generator' && '🎵'}
+                                {service === 'metaphor-creator' && '✨'}
+                              </span>
+                              <span>
+                                {service === 'metaphor-classifier' && 'Metaphor Classifier'}
+                                {service === 'lyric-generator' && 'Lyric Generator'}
+                                {service === 'metaphor-creator' && 'Metaphor Creator'}
+                              </span>
+                            </h4>
+                            <div className="space-y-3">
+                              {promptList.map((prompt, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`px-4 py-3 rounded-2xl text-xs text-gray-100 bg-gradient-to-r from-gray-700/70 to-gray-800/70 border border-gray-700 hover:border-green-500 hover:shadow-lg cursor-pointer transition-all ${
+                                    service === 'metaphor-classifier' ? 'hover:shadow-green-500/30' :
+                                    service === 'lyric-generator' ? 'hover:shadow-teal-500/30' :
+                                    'hover:shadow-emerald-500/30'
+                                  }`}
+                                  onClick={() => {
+                                    setInput(prompt);
+                                    setSelectedModel(service);
+                                  }}
+                                >
+                                  {prompt}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Favorite Prompts */}
+                  <div className="mb-6">
+                    <button
+                      onClick={() => setShowFavorites(!showFavorites)}
+                      className="w-full flex items-center justify-between text-gray-300 text-sm uppercase font-bold mb-4 tracking-wide hover:text-white transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        Favorites
+                      </div>
+                      {showFavorites ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+
+                    {showFavorites && (
+                      <div className="space-y-2">
+                        {favoritePrompts.length > 0 ? (
+                          favoritePrompts.map((prompt, idx) => (
+                            <div
+                              key={idx}
+                              className="px-3 py-2 rounded-lg text-xs text-gray-100 bg-gradient-to-r from-green-600/20 to-green-800/20 border border-green-700/30 hover:border-green-500 hover:shadow-lg cursor-pointer transition-all flex items-center justify-between group"
+                              onClick={() => setInput(prompt)}
+                            >
+                              <span className="flex-grow">{prompt.substring(0, 50)}...</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFavoritePrompts(prev => prev.filter((_, i) => i !== idx));
+                                }}
+                                className="ml-2 text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-xs text-gray-500 italic text-center py-4">
+                            No favorites yet. Star prompts to save them here.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
         </div>
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden relative" style={{ width: '100%' }}>
           {/* Decorative background elements */}
-          <div className="absolute top-20 left-20 w-64 h-64 bg-purple-600/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-40 right-20 w-72 h-72 bg-pink-600/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-20 left-20 w-64 h-64 bg-green-600/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-40 right-20 w-72 h-72 bg-teal-600/5 rounded-full blur-3xl"></div>
           
           {/* Error notification */}
           {error && (
@@ -1033,41 +1293,40 @@ useEffect(() => {
           )}
           
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-8 relative z-10 scrollbar-thin scrollbar-thumb-pink-600 scrollbar-track-gray-900">
+          <div className="flex-1 overflow-y-auto p-6 space-y-8 relative z-10 scrollbar-thin scrollbar-thumb-green-600 scrollbar-track-gray-900">
             {messages.map((message, idx) => (
               message.role === 'system' ? (
                 <div key={idx} className="flex justify-center items-center">
                   <div className="flex flex-col items-center mt-12 space-y-8">
-  {/* Welcome Card */}
-  <div className="max-w-md w-full bg-gradient-to-r from-purple-700/40 via-pink-500/30 to-purple-600/30 text-white shadow-2xl rounded-3xl px-8 py-6 text-center border border-purple-400/30 backdrop-blur-md">
-    <div className="text-2xl font-semibold mb-2">🤖 Welcome!</div>
-    <div className="text-sm text-gray-100/90">
-      {formatMessage(message.content)}
-    </div>
-  </div>
+                    {/* Welcome Card */}
+                    <div className="max-w-md w-full bg-gradient-to-r from-green-700/40 via-teal-500/30 to-green-600/30 text-white shadow-2xl rounded-3xl px-8 py-6 text-center border border-green-400/30 backdrop-blur-md">
+                      <div className="text-2xl font-semibold mb-2">🌿 Welcome!</div>
+                      <div className="text-sm text-gray-100/90">
+                        {formatMessage(message.content)}
+                      </div>
+                    </div>
 
-  {/* Services Cards */}
-  <div className="flex flex-col md:flex-row justify-center gap-6 w-full max-w-4xl">
-    {/* Lyric Generation */}
-    <div className="flex-1 bg-gradient-to-br from-blue-700/30 to-blue-900/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
-      <div className="text-xl font-bold mb-2">🎵 Lyric Generation</div>
-      <div className="text-sm text-gray-200">Generate creative lyrics instantly.</div>
-    </div>
+                    {/* Services Cards */}
+                    <div className="flex flex-col md:flex-row justify-center gap-6 w-full max-w-4xl">
+                      {/* Lyric Generation */}
+                      <div className="flex-1 bg-gradient-to-br from-green-700/30 to-green-900/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
+                        <div className="text-xl font-bold mb-2">🎵 Lyric Generation</div>
+                        <div className="text-sm text-gray-200">Generate creative lyrics instantly.</div>
+                      </div>
 
-    {/* Metaphor Classifier */}
-    <div className="flex-1 bg-gradient-to-br from-orange-600/30 to-orange-800/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
-      <div className="text-xl font-bold mb-2">🎭 Metaphor Classifier</div>
-      <div className="text-sm text-gray-200">Detect metaphors in text easily.</div>
-    </div>
+                      {/* Metaphor Classifier */}
+                      <div className="flex-1 bg-gradient-to-br from-teal-600/30 to-teal-800/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
+                        <div className="text-xl font-bold mb-2">🎭 Metaphor Classifier</div>
+                        <div className="text-sm text-gray-200">Detect metaphors in text easily.</div>
+                      </div>
 
-    {/* Metaphor Creator */}
-    <div className="flex-1 bg-gradient-to-br from-pink-600/30 to-pink-800/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
-      <div className="text-xl font-bold mb-2">✨ Metaphor Creator</div>
-      <div className="text-sm text-gray-200">Create beautiful metaphors from ideas.</div>
-    </div>
-  </div>
-</div>
-
+                      {/* Metaphor Creator */}
+                      <div className="flex-1 bg-gradient-to-br from-emerald-600/30 to-emerald-800/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
+                        <div className="text-xl font-bold mb-2">✨ Metaphor Creator</div>
+                        <div className="text-sm text-gray-200">Create beautiful metaphors from ideas.</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div 
@@ -1076,7 +1335,7 @@ useEffect(() => {
                   style={{ animationDelay: `${idx * 0.1}s` }}
                 >
                   {message.role !== 'user' && (
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0 flex items-center justify-center mr-3 shadow-lg">
+                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-green-500 to-teal-400 flex-shrink-0 flex items-center justify-center mr-3 shadow-lg">
                       {message.role === 'system' ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -1089,7 +1348,7 @@ useEffect(() => {
                   <div 
                     className={`max-w-2xl rounded-2xl px-5 py-4 ${
                       message.role === 'user' 
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20' 
+                        ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg shadow-green-500/20' 
                         : message.role === 'system'
                           ? 'bg-gray-700/80 text-gray-100 shadow-lg'
                           : 'bg-gray-800/80 backdrop-blur-sm text-white border border-gray-700 shadow-lg'
@@ -1098,17 +1357,17 @@ useEffect(() => {
                     {message.role === 'assistant' && message.service && (
                       <div className={`flex items-center mb-2 ${
                         message.service === 'metaphor-classifier' 
-                          ? 'text-orange-400' 
+                          ? 'text-green-400' 
                           : message.service === 'lyric-generator'
-                            ? 'text-blue-400'
-                            : 'text-pink-400'
+                            ? 'text-teal-400'
+                            : 'text-emerald-400'
                       }`}>
                         <div className={`h-6 w-6 rounded-md flex items-center justify-center mr-2 ${
                           message.service === 'metaphor-classifier' 
-                            ? 'bg-orange-500/20' 
+                            ? 'bg-green-500/20' 
                             : message.service === 'lyric-generator'
-                              ? 'bg-blue-500/20'
-                              : 'bg-pink-500/20'
+                              ? 'bg-teal-500/20'
+                              : 'bg-emerald-500/20'
                         }`}>
                           {message.service === 'metaphor-classifier' && '🎭'}
                           {message.service === 'lyric-generator' && '🎵'}
@@ -1126,7 +1385,7 @@ useEffect(() => {
                     {message.role === 'assistant' && (
                       <div className="mt-4 flex justify-end">
                         <button
-                          className="px-3 py-1 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-semibold shadow transition"
+                          className="px-3 py-1 bg-green-700 hover:bg-green-800 text-white rounded-lg text-xs font-semibold shadow transition"
                           onClick={() => handleRerun(idx)}
                         >
                           Rerun
@@ -1147,7 +1406,7 @@ useEffect(() => {
             {batchResults && (
               <div className="bg-gray-900/80 rounded-2xl p-6 shadow-lg border border-gray-700 mt-4">
                 <div className="flex items-center mb-4">
-                  <span className="text-orange-400 text-lg font-bold mr-2">🎭</span>
+                  <span className="text-green-400 text-lg font-bold mr-2">🎭</span>
                   <span className="font-semibold text-white">Batch Metaphor Analysis</span>
                 </div>
                 <div className="mb-4 flex flex-wrap gap-6 items-center">
@@ -1155,7 +1414,7 @@ useEffect(() => {
                     <div className="text-xs text-gray-400 mb-1">Summary Chart</div>
                     {renderPieChart(chartData)}
                     <div className="text-xs text-gray-400 mt-2">
-                      <span className="text-orange-400 font-bold">{chartData.metaphor}</span> metaphor(s), <span className="text-gray-300 font-bold">{chartData.literal}</span> literal(s)
+                      <span className="text-green-400 font-bold">{chartData.metaphor}</span> metaphor(s), <span className="text-gray-300 font-bold">{chartData.literal}</span> literal(s)
                     </div>
                   </div>
                   <div className="flex-1">
@@ -1184,11 +1443,11 @@ useEffect(() => {
   key={idx + (batchPage - 1) * batchPageSize}
   className={`rounded-lg px-4 py-2 flex items-center gap-3 ${
     res.isMetaphor
-      ? 'bg-orange-500/10 border-l-4 border-orange-400'
+      ? 'bg-green-500/10 border-l-4 border-green-400'
       : 'bg-gray-700/50 border-l-4 border-gray-500'
   }`}
 >
-  <span className={`font-bold ${res.isMetaphor ? 'text-orange-400' : 'text-gray-300'}`}>
+  <span className={`font-bold ${res.isMetaphor ? 'text-green-400' : 'text-gray-300'}`}>
     {res.isMetaphor ? 'Metaphor' : 'Literal'}
   </span>
   <span className="text-xs text-gray-400">
@@ -1202,6 +1461,21 @@ useEffect(() => {
 </div>
 
                         ))}
+
+                        {/* Show all results button */}
+                        {batchResults.length > batchPageSize && (
+                          <div className="flex justify-center mt-4">
+                            <button
+                              onClick={() => setBatchPage(Math.ceil(batchResults.length / batchPageSize))}
+                              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-2"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 3v18" />
+                              </svg>
+                              Show All Results
+                            </button>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -1225,7 +1499,7 @@ useEffect(() => {
                           </tr>
                           <tr className="border-b border-gray-700">
                             <td className="px-4 py-2">Metaphors</td>
-                            <td className="px-4 py-2 font-semibold text-orange-400">{chartData.metaphor}</td>
+                            <td className="px-4 py-2 font-semibold text-green-400">{chartData.metaphor}</td>
                           </tr>
                           <tr className="border-b border-gray-700">
                             <td className="px-4 py-2">Literal</td>
@@ -1249,14 +1523,14 @@ useEffect(() => {
 
             {isLoading && (
               <div className="flex justify-start animate-fade-in">
-                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0 flex items-center justify-center mr-3 shadow-lg">
+                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-green-500 to-teal-400 flex-shrink-0 flex items-center justify-center mr-3 shadow-lg">
                   <span className="text-white font-bold">AI</span>
                 </div>
                 <div className="max-w-full rounded-2xl px-5 py-4 bg-gray-800/80 backdrop-blur-sm text-white border border-gray-700 shadow-lg">
                   <div className="flex space-x-2 items-center">
-                    <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
-                    <div className="w-2 h-2 rounded-full bg-pink-400 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                    <div className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
                     <span className="text-sm text-gray-400 ml-2">Generating response...</span>
                   </div>
                 </div>
@@ -1270,15 +1544,16 @@ useEffect(() => {
             <div className="bg-gradient-to-br from-gray-800/90 via-gray-900/90 to-black/90 rounded-xl border border-gray-700/40 mx-4 mb-2">
               {/* Toggle button */}
               <button
-                onClick={() => setShowMetaphorOptionsPanel(!showMetaphorOptionsPanel)}
-                className="w-full flex items-center justify-between px-4 py-3 text-sm text-pink-400 hover:text-pink-300 transition-colors"
-              >
-                <span className="flex items-center">
-                  <span className="text-lg mr-2">✨</span>
-                  <span className="font-medium">Create Metaphors</span>
-                </span>
-                {showMetaphorOptionsPanel ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-              </button>
+  onClick={() => setShowMetaphorOptionsPanel(!showMetaphorOptionsPanel)}
+  className="w-full flex items-center justify-between px-4 py-3 text-sm text-green-400 hover:text-green-300 transition-colors"
+>
+  <span className="flex items-center">
+    <span className="text-lg mr-2">✨</span>
+    <span className="font-medium">Create Metaphors</span>
+  </span>
+  {showMetaphorOptionsPanel ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+</button>
+
 
               {/* Expandable panel */}
               {showMetaphorOptionsPanel && (
@@ -1330,15 +1605,16 @@ useEffect(() => {
                   {/* Generate Button */}
                   <div className="mt-4 text-center">
                     <button
-                      onClick={() => {
-                        const message = `Create a metaphor source: ${metaphorSource} target: ${metaphorTarget} emotion: ${metaphorEmotion}`;
-                        setInput(message);
-                        setShowMetaphorOptionsPanel(false);
-                      }}
-                      className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all font-medium"
-                    >
-                      Create Metaphor
-                    </button>
+  onClick={() => {
+    const message = `Create a metaphor source: ${metaphorSource} target: ${metaphorTarget} emotion: ${metaphorEmotion}`;
+    setInput(message);
+    setShowMetaphorOptionsPanel(false);
+  }}
+  className="bg-gradient-to-r from-green-500 to-teal-400 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all font-medium"
+>
+  Create Metaphor
+</button>
+
                   </div>
                 </div>
               )}
@@ -1349,15 +1625,16 @@ useEffect(() => {
     <div className="bg-gradient-to-br from-gray-800/90 via-gray-900/90 to-black/90 rounded-xl border border-gray-700/40 mx-4 mb-2">
       {/* Toggle button */}
       <button
-        onClick={() => setShowLyricOptionsPanel(!showLyricOptionsPanel)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-      >
-        <span className="flex items-center">
-          <span className="text-lg mr-2">✨</span>
-          <span className="font-medium">Generate Tamil Lyrics</span>
-        </span>
-        {showLyricOptionsPanel ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-      </button>
+  onClick={() => setShowLyricOptionsPanel(!showLyricOptionsPanel)}
+  className="w-full flex items-center justify-between px-4 py-3 text-sm text-green-400 hover:text-green-300 transition-colors"
+>
+  <span className="flex items-center">
+    <span className="text-lg mr-2">✨</span>
+    <span className="font-medium">Generate Tamil Lyrics</span>
+  </span>
+  {showLyricOptionsPanel ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+</button>
+
 
       {/* Expandable panel */}
       {showLyricOptionsPanel && (
@@ -1408,15 +1685,16 @@ useEffect(() => {
           {/* Generate Button */}
           <div className="mt-4 text-center">
             <button
-              onClick={() => {
-                const message = `Generate a song emotion: ${lyricEmotion}${lyricSeed ? ` seed: "${lyricSeed}"` : ''}`;
-                setInput(message);
-                setShowLyricOptionsPanel(false);
-              }}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all font-medium"
-            >
-              Create Verse/Lyric
-            </button>
+  onClick={() => {
+    const message = `Generate a song emotion: ${lyricEmotion}${lyricSeed ? ` seed: "${lyricSeed}"` : ''}`;
+    setInput(message);
+    setShowLyricOptionsPanel(false);
+  }}
+  className="bg-gradient-to-r from-green-500 to-teal-400 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all font-medium"
+>
+  Create Verse/Lyric
+</button>
+
           </div>
         </div>
       )}
@@ -1428,26 +1706,50 @@ useEffect(() => {
           <div className="border-t border-gray-700/50 backdrop-blur-sm bg-gray-800/30 p-4 w-full">
             <div className="w-full relative">
               <textarea
-                className="w-full bg-gray-800/90 text-white rounded-2xl border border-gray-700 pl-5 pr-14 py-4 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none shadow-lg"
+                className={`w-full bg-gray-800/90 text-white rounded-2xl border border-gray-700 pl-5 pr-14 py-4 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none shadow-lg ${
+                  fontSize === 'small' ? 'text-sm' : fontSize === 'large' ? 'text-lg' : 'text-base'
+                }`}
                 rows="3"
                 placeholder="Type your message here..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
               ></textarea>
-              <button 
-                className="absolute right-4 bottom-4 text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-3 hover:shadow-lg hover:shadow-purple-500/20 disabled:opacity-50 transition-all"
-                onClick={handleSendMessage}
-                disabled={!input.trim() || isLoading}
+              
+              {/* Star button for adding to favorites */}
+              <button
+                onClick={() => addToFavorites(input)}
+                className="absolute right-16 bottom-4 text-gray-400 hover:text-yellow-400 p-2 transition-colors"
+                disabled={!input.trim()}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                 </svg>
               </button>
+
+                <button 
+    className="absolute right-4 bottom-4 text-white bg-gradient-to-r from-green-500 to-teal-400 rounded-xl p-3 hover:shadow-lg hover:shadow-green-500/20 disabled:opacity-50 transition-all"
+    onClick={handleSendMessage}
+    disabled={!input.trim() || isLoading}
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+    </svg>
+  </button>
+
             </div>
-            <div className="w-full mt-3 text-xs text-gray-400 text-center">
-              Tamil AI Models uses advanced AI to provide assistance. Your conversations help improve our services.
-              <span className="text-purple-400 hover:text-purple-300 cursor-pointer ml-1">Privacy Policy</span>
+            
+            <div className="flex justify-between items-center mt-3">
+              <div className="text-xs text-gray-400">
+                Tamil AI Models uses advanced AI to provide assistance. Your conversations help improve our services.
+                <span className="text-green-400 hover:text-green-300 cursor-pointer ml-1">Privacy Policy</span>
+              </div>
+              
+              {showWordCount && (
+                <div className="text-xs text-gray-400">
+                  Words: {getWordCount()}
+                </div>
+              )}
             </div>
           </div>
         </div>
