@@ -203,7 +203,7 @@ const exportChat = (type = 'txt') => {
           key={motion.value}
           className={`${
             lyricEmotion === motion.value
-              ? 'bg-blue-600 text-white border-blue-500'
+              ? 'bg-green-600 text-white border-green-500'
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600'
           } rounded-lg p-2 transition-all border text-xs`}
           onClick={() => setLyricEmotion(motion.value)}
@@ -1568,7 +1568,7 @@ useEffect(() => {
                       <label className="text-sm text-gray-300 mb-2">Source Concept</label>
                       <input 
                         type="text" 
-                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
+                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                         placeholder="e.g., love, knowledge, time"
                         value={metaphorSource}
                         onChange={(e) => setMetaphorSource(e.target.value)}
@@ -1580,7 +1580,7 @@ useEffect(() => {
                       <label className="text-sm text-gray-300 mb-2">Target Domain</label>
                       <input 
                         type="text" 
-                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
+                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                         placeholder="e.g., ocean, fire, journey"
                         value={metaphorTarget}
                         onChange={(e) => setMetaphorTarget(e.target.value)}
@@ -1591,7 +1591,7 @@ useEffect(() => {
                     <div className="flex flex-col">
                       <label className="text-sm text-gray-300 mb-2">Emotion</label>
                       <select
-                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
+                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                         value={metaphorEmotion}
                         onChange={(e) => setMetaphorEmotion(e.target.value)}
                       >
@@ -1654,7 +1654,7 @@ useEffect(() => {
                     key={motion.value}
                     className={`${
                       lyricEmotion === motion.value
-                        ? 'bg-blue-600 text-white border-blue-500'
+                        ? 'bg-green-600 text-white border-green-500'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600'
                     } rounded-lg p-2 transition-all border text-xs`}
                     onClick={() => setLyricEmotion(motion.value)}
@@ -1673,7 +1673,7 @@ useEffect(() => {
             <div className="flex flex-col">
               <label className="text-sm text-gray-300 mb-2">Initial Sentence (Optional)</label>
               <textarea
-                className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition text-sm"
+                className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none transition text-sm"
                 placeholder="Enter an initial sentence..."
                 rows="4"
                 value={lyricSeed}
