@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import axios from 'axios'; // You'll need to install axios: npm install axios
 
 export default function ChatPage() {
+   const textareaRef = useRef(null);
   const [messages, setMessages] = useState([
     {
       role: 'system',
@@ -64,7 +65,12 @@ export default function ChatPage() {
     'lyric-generator': 'http://localhost:5000/api/generate-lyrics',
     'metaphor-creator': 'http://localhost:5000/api/create-metaphors'
   };
-  
+  const handleInput = (e) => {
+    const el = textareaRef.current;
+    el.style.height = "auto";  
+    el.style.height = el.scrollHeight + "px";  
+    setInput(e.target.value);
+  };
   // Mock examples for each service
   const examples = {
     'metaphor-classifier': [
@@ -1706,16 +1712,21 @@ useEffect(() => {
           {/* Input Area */}
           <div className="border-t border-gray-700/50 backdrop-blur-sm bg-gray-800/30 p-4 w-full">
             <div className="w-full relative">
-              <textarea
-                className={`w-full bg-gray-800/90 text-white rounded-2xl border border-gray-700 pl-5 pr-14 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none shadow-lg ${
-                  fontSize === 'small' ? 'text-sm' : fontSize === 'large' ? 'text-lg' : 'text-base'
-                }`}
-                rows="3"
-                placeholder="Type your message here..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-              ></textarea>
+               <textarea
+      ref={textareaRef}
+      className={`w-full bg-gray-800/90 text-white rounded-2xl border border-gray-700 pl-5 pr-14 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none shadow-lg ${
+        fontSize === "small"
+          ? "text-sm"
+          : fontSize === "large"
+          ? "text-lg"
+          : "text-base"
+      }`}
+      rows="1"
+      placeholder="Type your message here..."
+      value={input}
+      onChange={handleInput}
+      onKeyDown={handleKeyDown}
+    ></textarea>
               
               {/* Star button for adding to favorites */}
               <button
