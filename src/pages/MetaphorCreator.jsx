@@ -1,4 +1,3 @@
-"use client"
 
 import { useState } from "react"
 import { Pie, Bar } from "react-chartjs-2"

@@ -14,6 +14,7 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import MaskingPredict from './pages/MaskingPredict';
 
 // Private Route component
 function PrivateRoute({ children }) {
@@ -77,6 +78,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <Profile />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/masking-predict" 
+              element={
+                <PrivateRoute>
+                  <MaskingPredict />
                 </PrivateRoute>
               } 
             />

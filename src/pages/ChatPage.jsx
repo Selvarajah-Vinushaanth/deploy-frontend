@@ -8,7 +8,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([
     {
       role: 'system',
-      content: 'Welcome to Tamil AI Chat. You can use this interface to interact with our Metaphor Classifier, Lyric Generator, and Metaphor Creator. How can I help you today?'
+      content: 'Welcome to Tamil AI Chat. You can use this interface to interact with our Metaphor Classifier, Lyric Generator, Metaphor Creator, and Masking Predict services. How can I help you today?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -48,6 +48,11 @@ export default function ChatPage() {
   const [showLyricOptions, setShowLyricOptions] = useState(false);
   const [lyricEmotion, setLyricEmotion] = useState("calm");
   const [lyricSeed, setLyricSeed] = useState("");
+  
+  // New states for masking predict options
+  const [showMaskingOptions, setShowMaskingOptions] = useState(false);
+  const [maskText, setMaskText] = useState("");
+  
   const [lyricSuggestions, setLyricSuggestions] = useState([
     "Under the moonlight we danced, swaying to the rhythm of our hearts.",
     "Whispers of love echo through the night, painting our dreams in starlight.",
@@ -63,7 +68,8 @@ export default function ChatPage() {
   const API_ENDPOINTS = {
     'metaphor-classifier': 'http://localhost:5000/api/predict',
     'lyric-generator': 'http://localhost:5000/api/generate-lyrics',
-    'metaphor-creator': 'http://localhost:5000/api/create-metaphors'
+    'metaphor-creator': 'http://localhost:5000/api/create-metaphors',
+    'masking-predict': 'http://localhost:5000/api/predict-mask'
   };
   const handleInput = (e) => {
     const el = textareaRef.current;
@@ -87,6 +93,11 @@ export default function ChatPage() {
       'Create a metaphor source: love target: ocean emotion: positive',
       'Make a metaphor source: life target: river emotion: neutral',
       'Generate a metaphor about knowledge and light emotion: positive'
+    ],
+    'masking-predict': [
+      'Predict words for "I [mask] to school every day"',
+      'Fill in "நான் [mask] வீட்டிற்கு செல்கிறேன்"',
+      'Complete "She [mask] the book carefully"'
     ]
   };
 
@@ -100,6 +111,7 @@ export default function ChatPage() {
     // Show/hide appropriate options based on selected model
     setShowMetaphorOptions(selectedModel === 'metaphor-creator');
     setShowLyricOptions(selectedModel === 'lyric-generator');
+    setShowMaskingOptions(selectedModel === 'masking-predict');
     
     // Reset input if model changes
     if (selectedModel === 'metaphor-creator') {
@@ -114,8 +126,12 @@ export default function ChatPage() {
         }
         setInput(inputText);
       }
+    } else if (selectedModel === 'masking-predict') {
+      if (maskText) {
+        setInput(`Predict words for "${maskText}"`);
+      }
     }
-  }, [selectedModel, metaphorSource, metaphorTarget, metaphorEmotion, lyricEmotion, lyricSeed]);
+  }, [selectedModel, metaphorSource, metaphorTarget, metaphorEmotion, lyricEmotion, lyricSeed, maskText]);
 const exportChat = (type = 'txt') => {
   const chatContent = document.querySelector("#chat-container")?.innerText;
   if (!chatContent) return;
@@ -160,6 +176,8 @@ const exportChat = (type = 'txt') => {
       return 'lyric-generator';
     } else if ((lowerMsg.includes('create') || lowerMsg.includes('make') || lowerMsg.includes('generate')) && lowerMsg.includes('metaphor')) {
       return 'metaphor-creator';
+    } else if (lowerMsg.includes('[mask]') || lowerMsg.includes('predict') || lowerMsg.includes('fill') || lowerMsg.includes('complete')) {
+      return 'masking-predict';
     }
 
     return 'auto'; // Default
@@ -168,7 +186,7 @@ const exportChat = (type = 'txt') => {
   const handleNewChat = () => {
     setMessages([{
       role: 'system',
-      content: 'Welcome to Tamil AI Chat. You can use this interface to interact with our Metaphor Classifier, Lyric Generator, and Metaphor Creator. How can I help you today?'
+      content: 'Welcome to Tamil AI Chat. You can use this interface to interact with our Metaphor Classifier, Lyric Generator, Metaphor Creator, and Masking Predict services. How can I help you today?'
     }]);
     setInput('');
     setError(null);
@@ -541,6 +559,60 @@ const exportChat = (type = 'txt') => {
           const metaphorsText = fallbackMetaphors.join('\n\n');
           responseContent = `**Created Metaphor**\n\nHere are some beautiful metaphors about "${source}"${target !== "general" ? ` related to "${target}"` : ''} with ${emotion} emotion:\n\n${metaphorsText}\n\nThese metaphors connect the concepts in a creative way that enhances understanding and emotional impact.`;
         }
+      } else if (service === 'masking-predict') {
+        // Extract the sentence with [mask] token
+        let sentence = "";
+        
+        // Check if the input contains [mask]
+        if (input.includes("[mask]")) {
+          sentence = input;
+        } else {
+          // Try to extract text within quotes as the sentence
+          const quoteMatch = input.match(/"([^"]+)"/);
+          if (quoteMatch && quoteMatch[1]) {
+            sentence = quoteMatch[1];
+          } else {
+            // Use the whole input, assuming it's the sentence
+            sentence = input.replace(/predict words for|fill in|complete/i, "").trim();
+          }
+        }
+        
+        // Masking Predict POST request
+        const response = await axios.post(API_ENDPOINTS['masking-predict'], {
+          text: sentence,
+          top_k: 5
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // Process masking predict response
+        if (response.data && response.data.suggestions && response.data.suggestions.length > 0) {
+          const suggestions = response.data.suggestions;
+          
+          // Create response with suggestions
+          responseContent = `**Mask Prediction Results**\n\nFor the sentence: "${sentence}"\n\nHere are the top ${suggestions.length} predictions for the masked word:\n\n`;
+          
+          // Add each suggestion with its replacement in the sentence
+          suggestions.forEach((word, index) => {
+            const completedSentence = sentence.replace("[mask]", `**${word}**`);
+            responseContent += `${index + 1}. ${completedSentence}\n\n`;
+          });
+          
+          responseContent += "These predictions are based on the context of your sentence and common word usage patterns.";
+        } else {
+          // Fallback with some generic suggestions
+          responseContent = `**Mask Prediction Results**\n\nFor the sentence: "${sentence}"\n\nHere are the top predictions for the masked word:\n\n`;
+          
+          const fallbackSuggestions = ["go", "walk", "run", "travel", "drive"];
+          fallbackSuggestions.forEach((word, index) => {
+            const completedSentence = sentence.replace("[mask]", `**${word}**`);
+            responseContent += `${index + 1}. ${completedSentence}\n\n`;
+          });
+          
+          responseContent += "These are generic suggestions. For better results, make sure your sentence contains a [mask] token.";
+        }
       } else {
         throw new Error(`Service ${service} not supported`);
       }
@@ -715,6 +787,108 @@ const copyLyric = (text) => {
         
         return <div dangerouslySetInnerHTML={{ __html: result }} />;
       }
+    }
+    
+    // Handle mask prediction results with beautiful formatting and copy function
+    if (content.includes("**Mask Prediction Results**")) {
+      // Extract the different parts of the content
+      const parts = content.split("\n\n");
+      
+      // Extract the header, sentence, intro, and predictions
+      let header = parts[0]; // "**Mask Prediction Results**"
+      let sentencePart = parts[1]; // "For the sentence: "xxx""
+      let introPart = parts[2]; // "Here are the top X predictions..."
+      
+      // Extract the sentence from the sentence part
+      const sentenceMatch = sentencePart.match(/"([^"]+)"/);
+      const originalSentence = sentenceMatch ? sentenceMatch[1] : "";
+      
+      // Extract all the predictions (starts from parts[3])
+      const predictions = [];
+      for (let i = 3; i < parts.length - 1; i++) {
+        const predictionPart = parts[i];
+        if (predictionPart.match(/^\d+\./)) {
+          predictions.push(predictionPart);
+        }
+      }
+      
+      // Format the result with green theme and copy functionality
+      const result = `
+        <div class="mask-predictions-container bg-gradient-to-br from-green-900/30 to-emerald-900/20 rounded-xl p-4 border border-green-700/30 backdrop-blur-sm">
+          <div class="header pb-3 border-b border-green-700/30 flex justify-between items-center">
+            <h3 class="text-green-400 font-bold text-lg">Mask Prediction Results</h3>
+            <div class="flex space-x-2">
+              <span class="text-xs px-2 py-1 bg-green-900/50 rounded-full text-green-300 border border-green-700/30">
+                ${predictions.length} results
+              </span>
+            </div>
+          </div>
+          
+          <div class="sentence-container my-3 p-3 bg-black/20 rounded-lg border border-green-800/30">
+            <p class="text-white mb-1 text-sm opacity-80">Original Sentence:</p>
+            <p class="text-green-100 font-medium">"${originalSentence}"</p>
+          </div>
+          
+          <div class="predictions-container space-y-3 my-4">
+            ${predictions.map((pred, index) => {
+              // Extract the prediction number and the completed sentence
+              const parts = pred.split(". ");
+              const predNumber = parts[0];
+              let completedSentence = parts.slice(1).join(". ");
+              
+              // Extract the predicted word (between ** markers)
+              const wordMatch = completedSentence.match(/\*\*([^*]+)\*\*/);
+              const predictedWord = wordMatch ? wordMatch[1] : "";
+              
+              // Create the completed sentence with highlighted word
+              completedSentence = completedSentence.replace(/\*\*([^*]+)\*\*/, '<span class="font-bold text-green-300">$1</span>');
+              
+              return `
+                <div class="prediction-item flex items-start hover:bg-green-900/20 p-2 rounded-lg transition-colors">
+                  <div class="prediction-number flex-shrink-0 w-6 h-6 rounded-full bg-green-800/40 flex items-center justify-center mr-3 border border-green-700/40">
+                    <span class="text-xs text-green-300">${predNumber}</span>
+                  </div>
+                  <div class="prediction-content flex-grow">
+                    <p class="text-white">${completedSentence}</p>
+                  </div>
+                  <button 
+                    onclick="copyPrediction(event, '${encodeURIComponent(completedSentence.replace(/<[^>]*>/g, ""))}')"
+                    class="copy-btn ml-2 flex-shrink-0 text-green-400 hover:text-green-300 bg-green-900/30 hover:bg-green-800/40 p-1.5 rounded-md transition-all border border-green-700/30"
+                    title="Copy prediction"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          
+          <div class="footer pt-3 border-t border-green-700/30 text-sm text-green-300/70 italic">
+            These predictions are based on the context of your sentence and common word usage patterns.
+          </div>
+          
+          <script>
+            function copyPrediction(event, text) {
+              const decodedText = decodeURIComponent(text);
+              navigator.clipboard.writeText(decodedText);
+              
+              const btn = event.currentTarget;
+              const originalHTML = btn.innerHTML;
+              btn.innerHTML = '<span class="text-xs text-green-400">✓</span>';
+              btn.classList.add('bg-green-600/50');
+              
+              setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('bg-green-600/50');
+              }, 2000);
+            }
+          </script>
+        </div>
+      `;
+      
+      return <div dangerouslySetInnerHTML={{ __html: result }} />;
     }
     
     // Handle metaphor output with copy buttons
@@ -895,7 +1069,20 @@ useEffect(() => {
       btn.classList.remove('bg-green-600');
     }, 2000);
   };
-
+window.copyPrediction = (event, text) => {
+    const decodedText = decodeURIComponent(text);
+    navigator.clipboard.writeText(decodedText);
+    
+    const btn = event.currentTarget;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="text-xs text-green-400">✓</span>';
+    btn.classList.add('bg-green-600');
+    
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.classList.remove('bg-green-600');
+    }, 2000);
+  };
   // Cleanup function to remove global functions when component unmounts
   return () => {
     delete window.copyLyric;
@@ -933,6 +1120,7 @@ useEffect(() => {
         <option value="metaphor-classifier">🎭 metaphor classifier</option>
         <option value="lyric-generator">🎵 lyric generator</option>
         <option value="metaphor-creator">✨ metaphor creator</option>
+        <option value="masking-predict">🕵️‍♂️ masking predict</option>
       </select>
 
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
@@ -1191,17 +1379,21 @@ useEffect(() => {
                           <div key={service} className="mb-6">
                             <h4 className={`text-sm font-bold mb-3 flex items-center gap-1 ${
                               service === 'metaphor-classifier' ? 'text-green-400' : 
-                              service === 'lyric-generator' ? 'text-teal-400' : 'text-emerald-400'
+                              service === 'lyric-generator' ? 'text-teal-400' : 
+                              service === 'metaphor-creator' ? 'text-emerald-400' :
+                              'text-lime-400'
                             }`}>
                               <span className="text-lg">
                                 {service === 'metaphor-classifier' && '🎭'}
                                 {service === 'lyric-generator' && '🎵'}
                                 {service === 'metaphor-creator' && '✨'}
+                                {service === 'masking-predict' && '🕵️‍♂️'}
                               </span>
                               <span>
                                 {service === 'metaphor-classifier' && 'Metaphor Classifier'}
                                 {service === 'lyric-generator' && 'Lyric Generator'}
                                 {service === 'metaphor-creator' && 'Metaphor Creator'}
+                                {service === 'masking-predict' && 'Masking Predict'}
                               </span>
                             </h4>
                             <div className="space-y-3">
@@ -1332,6 +1524,11 @@ useEffect(() => {
                         <div className="text-xl font-bold mb-2">✨ Metaphor Creator</div>
                         <div className="text-sm text-gray-200">Create beautiful metaphors from ideas.</div>
                       </div>
+                      <div className="flex-1 bg-gradient-to-br from-green-500/30 to-emerald-800/40 text-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all cursor-pointer text-center">
+  <div className="text-xl font-bold mb-2">🔎 Masking Prediction</div>
+  <div className="text-sm text-gray-200">Predict missing words in tamil sentences.</div>
+</div>
+
                     </div>
                   </div>
                 </div>

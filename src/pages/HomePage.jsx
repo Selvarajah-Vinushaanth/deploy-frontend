@@ -1,4 +1,3 @@
-"use client"
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -52,6 +51,15 @@ export default function HomePage() {
       color: "from-pink-500 to-rose-600",
       route: "/metaphor-creator",
       features: ["Custom creation", "Source & target mapping", "Multiple styles"],
+    },
+    {
+      id: "masking-predict",
+      title: "Masking Predict",
+      description: "Suggest words for masked positions in Tamil sentences (e.g., 'I [mask] to school')",
+      icon: "🕵️‍♂️",
+      color: "from-green-500 to-lime-500",
+      route: "/masking-predict",
+      features: ["Fill in the blank", "Multiple suggestions", "Context-aware"],
     },
   ]
 
@@ -205,7 +213,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 ">
           {cards.map((card, index) => (
             <div
               key={card.id}

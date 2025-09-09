@@ -8,6 +8,7 @@ import uvicorn
 from models.metaphor_creator import generate_metaphor
 from models.metaphor_classifier import classify_metaphor
 from models.lyric_generator import generate_lyrics_text
+from models.masking_predict import predict_masked_tokens
 
 app = FastAPI(title="Song Analysis API")
 
@@ -36,6 +37,12 @@ class PredictionResponse(BaseModel):
     is_metaphor: bool
     confidence: float
     
+class MaskingRequest(BaseModel):
+    text: str
+    top_k: Optional[int] = 5
+    
+class MaskingResponse(BaseModel):
+    suggestions: List[str]
 
 
 # API Routes
@@ -104,6 +111,20 @@ async def create_lyrics(request: LyricsRequest):
     except Exception as e:
         print(f"Error generating lyrics: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating lyrics: {str(e)}")
+
+@app.post("/api/predict-mask", response_model=MaskingResponse)
+async def predict_mask(request: MaskingRequest):
+    try:
+        if "[mask]" not in request.text:
+            raise HTTPException(status_code=400, detail="Text must contain [mask] token")
+        
+        suggestions = predict_masked_tokens(request.text, top_k=request.top_k)
+        
+        return {"suggestions": suggestions}
+    except Exception as e:
+        print(f"Error predicting masked tokens: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error predicting masked tokens: {str(e)}")
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Song Analysis API"}
